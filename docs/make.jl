@@ -38,11 +38,11 @@ makedocs(
         ],
         "Library" => "library.md"
     ],
-    repo = Documenter.Remotes.GitHub("rveltz", "Tractography.jl"), # shows GH link in top right position
+    repo = Documenter.Remotes.GitHub("cronos-inria", "Tractography.jl"), # shows GH link in top right position
     )
 
 deploydocs(;
-    repo = "github.com/rveltz/Tractography.jl.git",
+    repo = "github.com/cronos-inria/Tractography.jl.git",
     push_preview = true, 
     target = "build", 
     devbranch = "main")

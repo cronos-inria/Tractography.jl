@@ -13,7 +13,9 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Transform spherical to cartesian coordinates.
+Transform spherical to cartesian coordinates, the chart on the sphere minus the north/south poles.
+
+Its coordinates are (sin(θ)cos(ϕ), sin(θ)sin(ϕ), cos(θ)).
 
 Recall that θ ∈ [0, π] and ϕ ∈ [0, 2π].
 """
@@ -47,11 +49,9 @@ function fibonacci_sampling(N, 𝒯::DataType = Float64)
     out = Vector{Tuple{𝒯, 𝒯}}(undef, N+1)
     ϕ = (1 + √5)/2
     I = 0:N .+ 1/2
-    r = 2π/ϕ
-    n = 1
-    for i in I
-        out[n] = (𝒯(acos(1 - 2i/N)), 𝒯(mod(r * i, 2π)))
-        n += 1
+    r = 2π / ϕ
+    for (n, i) in enumerate(I)
+        out[n] = ( 𝒯(acos(1 - 2i/N)), 𝒯(mod(r * i, 2π)) )
     end
     return out
 end

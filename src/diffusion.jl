@@ -26,6 +26,9 @@ function init(model::TMC{𝒯, DirectSH},
     if is_normalized(model.foddata)
         fod ./= 𝒯(sqrt(4pi))
     end
+    if get_lmax(model) > 8
+        @warn "You passed data with lmax = $(get_lmax(model)) > 8. Only the first 45 coefficients will be used.\nPass `PreComputeAllFOD()` to overcome this."
+    end
 
     ThreadedCache(
         𝒯ₐ(fod),
@@ -76,7 +79,7 @@ function _init(model::TMC{𝒯, PreComputeAllFOD},
     ∂ϕodf = reshape(odf_vp, nx, ny, nz, na);
 
     @time_debug "Apply mollifier" LV.@tturbo @. odf = mollifier(odf)
-    @reset cache.odf   = @time_debug"permutedims" permutedims(odf,   (4, 1, 2, 3))
+    @reset cache.odf   = @time_debug"permutedims" permutedims(odf, (4, 1, 2, 3))
     @reset cache.∂θodf = permutedims(∂θodf, (4, 1, 2, 3))
     @reset cache.∂ϕodf = permutedims(∂ϕodf, (4, 1, 2, 3))
     @reset cache.∂θYₗₘ = ∂θYₗₘ

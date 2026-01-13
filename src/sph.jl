@@ -13,9 +13,10 @@ for l = 0:2:lmax, m = -l:l
 end
 n
 # gives sequence 1  6  15  28  45  66  91  120
+# for lmax       0  2   4   6  8   10  12  14  
 ```
 """
-get_fod_length(lmax) = div(lmax^2, 2) + div(3*lmax, 2) + 1
+get_fod_length(lmax) = div(lmax^2, 2) + div(3 * lmax, 2) + 1
 
 """
 $(TYPEDSIGNATURES)

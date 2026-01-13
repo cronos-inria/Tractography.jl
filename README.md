@@ -30,7 +30,7 @@ pkg> add Tractography
 
 Similar algorithms as the ones provided here are implemented in the python package
 
-[https://gitlab.inria.fr/cronos/software/tractography](https://gitlab.inria.fr/cronos/software/tractography)
+[https://github.com/cronos-inria/tractography](https://github.com/cronos-inria/tractography)
 
 There are several good softwares already available. There are listed on the [IST website](https://github.com/International-Society-for-Tractography/ist-tractography-db?tab=readme-ov-file#tractography--diffusion-software).
 

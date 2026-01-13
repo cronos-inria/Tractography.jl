@@ -1,9 +1,9 @@
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Exponential map on the sphere.
 
-We assume that t>0
+We assume that t > 0
 
 See https://github.com/JuliaManifolds/ManifoldsBase.jl/blob/5c4a61ed3e5e44755a22f7872cb296a621905f87/test/ManifoldsBaseTestUtils.jl#L63
 """
@@ -135,6 +135,7 @@ function sample!(streamlines,
 
     _, nx, ny, nz = size(cache.odf)
     streamlines_length .= nₜ ÷ saveat
+
     # launch gpu kernel
     backend = KA.get_backend(seeds)
     nth = backend isa KA.GPU ? gputhreads : nthreads

@@ -1,7 +1,7 @@
 import ForwardDiff
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Get the FOD vector length corresponding to a given lmax.
 This length is the result of
@@ -18,14 +18,14 @@ n
 get_fod_length(lmax) = div(lmax^2, 2) + div(3*lmax, 2) + 1
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Get the lmax from the ODF length, ie `size(data, 4)`. The is the inverse mapping of `get_fod_length`.
 """
 get_lmax_from_fod_length(n) = Int(-3/2 + sqrt(1 + 8*n)/2)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Evaluate the θ derivative of real orthonormal spherical harmonics.
 
@@ -36,7 +36,7 @@ function ∂θro_sh(θ, ϕ, l, m, outer_f = identity)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Evaluate the ϕ derivative of real orthonormal spherical harmonics.
 
@@ -47,7 +47,7 @@ function ∂ϕro_sh(θ, ϕ, l, m, outer_f = identity)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Evaluate the real orthonormal spherical harmonics.
 
@@ -60,7 +60,7 @@ function ro_sh(θ, ϕ, l, m)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Evaluate the real orthonormal spherical harmonics Yₗₘ(θ, ϕ) for `(θ, Φ) ∈ angles` for l ∈ [0, lₘₐₓ] and m ∈ [-l, l]. 
 
@@ -94,6 +94,13 @@ function get_vector_of_sh(angles::AbstractVector{Tuple{𝒯, 𝒯}}, lmax, der::
     Yₗₘ
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Computes S = ∑Vₗₘ⋅Yₗₘ(θ, ϕ) and its partial derivatives ∂pS and ∂tS.
+
+Returns (S, ∂pS, ∂tS)
+"""
 function ishtmtx_dot(phi::𝒯, 
                      theta::𝒯,
                      V::AbstractVector{𝒯},

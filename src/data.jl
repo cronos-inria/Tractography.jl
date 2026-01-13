@@ -70,7 +70,7 @@ function get_range(foddata::FODData)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Constructor for `FODData` based on Array data and transform.
 
@@ -86,7 +86,7 @@ end
 @inline transform_inv(ni::FODData, x) = transform_inv(ni.transform, x)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Constructor for `FODData` based on NII file.
 Read a `.nii.gz` or a `.nii` file passed as a `String`.
@@ -134,7 +134,7 @@ function _normalize_sph_data!(data)
 end
 ###########################################################################
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 """
 function Base.show(io::IO, ni::FODData{T, Tp}; full::Bool = false, prefix = "") where {T, Tp} 
     printstyled(prefix, Tp, "\n", bold = true, color = :cyan)

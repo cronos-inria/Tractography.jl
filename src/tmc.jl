@@ -214,9 +214,9 @@ Base.eltype(model::TMC{𝒯}) where 𝒯 = 𝒯
 @inline get_lmax(model::TMC) = get_lmax(getdata(model))
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
-`max(x,0)` as mollifier to prevent negative ODF.
+`max(x, 0)` as mollifier to prevent negative ODF.
 """
 max_mollifier(x) = max(0, x)
 get_range(model::TMC) = get_range(getdata(model))
@@ -241,7 +241,7 @@ function Base.show(io::IO, model::TMC)
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Multiply the mask which is akin to a matrix of `Bool` with same size as the data stored in `model`. Basically, the mask `mask[ix, iy, iz]` ensures whether the voxel `(ix, iy, iz)` is discarded or not.
 

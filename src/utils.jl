@@ -11,11 +11,11 @@ macro time_debug(msg, ex)
 end
 ####################################################################################################
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Transform spherical to cartesian coordinates.
 
-Recall that t∈[0, π] and p∈[0, 2π]
+Recall that θ ∈ [0, π] and ϕ ∈ [0, 2π].
 """
 @inline function spherical_to_euclidean(θ, ϕ)
     st, ct = sincos(θ)
@@ -27,9 +27,10 @@ Recall that t∈[0, π] and p∈[0, 2π]
 end
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Transform cartesian to spherical coordinates. Assume that the vector has norm one.
+Return (θ, ϕ) where θ ∈ [0, π] and ϕ ∈ [-π, π].
 """
 @inline function euclidean_to_spherical(x, y, z)
     t = acos(z)
@@ -37,6 +38,11 @@ Transform cartesian to spherical coordinates. Assume that the vector has norm on
     return t, p
 end
 ####################################################################################################
+"""
+$(TYPEDSIGNATURES)
+
+Returns points on the sphere in spherical coordinates which are approximately uniformly distributed. Each point (θ, ϕ) is such that θ ∈ [0, π] and ϕ ∈ [0, 2π].
+"""
 function fibonacci_sampling(N, 𝒯::DataType = Float64)
     out = Vector{Tuple{𝒯, 𝒯}}(undef, N+1)
     ϕ = (1 + √5)/2

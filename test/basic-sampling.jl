@@ -4,11 +4,13 @@ Tractography.PlottingSH()
 Tractography.PreComputeAllFOD()
 Tractography.DirectSH()
 
-Tractography.softplus(0,1)
-Tractography.∂softplus(0,1)
+Tractography.softplus(0, 1)
+Tractography.∂softplus(0, 1)
 
 Tractography.spherical_to_euclidean(0,0)
 @test all(Tractography.euclidean_to_spherical(Tractography.spherical_to_euclidean(0.1, -0.01)...) .≈ [0.1, -0.01])
+@test all(Tractography.euclidean_to_spherical(Tractography.spherical_to_euclidean(0.1, 3pi/2)...) .≈ [0.1, -pi/2])
+@test all(Tractography.euclidean_to_spherical(Tractography.spherical_to_euclidean(0.1, -pi/2)...) .≈ [0.1, -pi/2])
 u0 = normalize(rand(3))
 @test all([Tractography.spherical_to_euclidean(Tractography.euclidean_to_spherical(u0...)...)...] .≈ u0)
 

@@ -15,6 +15,9 @@
 [ver-img]: https://juliahub.com/docs/Tractography/version.svg
 [ver-url]: https://juliahub.com/ui/Packages/Tractography/
 
+[downloads-img]: https://img.shields.io/badge/dynamic/json?url=http%3A%2F%2Fjuliapkgstats.com%2Fapi%2Fv1%2Fmonthly_downloads%2FBifurcationKit&query=total_requests&suffix=%2Fmonth&label=Downloads
+[downloads-url]: https://juliapkgstats.com/pkg/BifurcationKit
+
 This Julia package implements different tractography algorithms from diffusion MRI and which run on CPU / GPU.
 
 

@@ -5,7 +5,7 @@
 
 | **Documentation links:** | **Build status** | **Coverage** | **Version /  Stats** |
 | :-: | :-: | :-: | :-: |
-| [![][docs-stable-img]][docs-stable-url] [![][docs-dev-img]][docs-dev-url] | [![Build status](https://github.com/cronos-inria/Tractography.jl/workflows/CI/badge.svg)](https://github.com/cronos-inria/actions) |  [![codecov](https://codecov.io/github/rveltz/Tractography.jl/graph/badge.svg?token=ZV8A33CFI5)](https://codecov.io/github/rveltz/Tractography.jl) |  [![][ver-img]][ver-url] [![downloads][downloads-img]][downloads-url]  |
+| [![][docs-stable-img]][docs-stable-url] [![][docs-dev-img]][docs-dev-url] | [![Build status](https://github.com/cronos-inria/Tractography.jl/workflows/CI/badge.svg)](https://github.com/cronos-inria/actions) |  [![codecov](https://codecov.io/github/rveltz/Tractography.jl/graph/badge.svg?token=ZV8A33CFI5)](https://codecov.io/github/rveltz/Tractography.jl) |  [![][ver-img]][ver-url]   |
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://cronos-inria.github.io/Tractography.jl/stable/

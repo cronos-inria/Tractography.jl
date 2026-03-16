@@ -23,19 +23,23 @@ function _get_sphere_fibonacci(N, 𝒯::DataType = Float64)
     return pts_h, faces, angles
 end
 ####################################################################################################
+"""
+$(SIGNATURES)
 
-function add_frame!(ax; x0 = zeros(3), r = 1, k...)
-    lines!(ax, Point3.([x0, x0 .+ [r, 0, 0]]); color = :red, k...)
-    lines!(ax, Point3.([x0, x0 .+ [0, r, 0]]); color = :green, k...)
-    lines!(ax, Point3.([x0, x0 .+ [0, 0, r]]); color = :blue, k...)
+Add locla frame to the scene `sc`.
+"""
+function add_frame!(sc; x0 = zeros(3), r = 1, k...)
+    lines!(sc, Point3.([x0, x0 .+ [r, 0, 0]]); color = :red, k...)
+    lines!(sc, Point3.([x0, x0 .+ [0, r, 0]]); color = :green, k...)
+    lines!(sc, Point3.([x0, x0 .+ [0, 0, r]]); color = :blue, k...)
 end
 
 """
 $(SIGNATURES)
 
-Plot the streamlines.
+Plot the streamlines with lines colored by local orientation.
 
-The optional parameters are passed to `lines!`
+The optional parameters are passed to `lines!`.
 """
 @views function plot_streamlines!(ax, streamlines::AbstractArray{𝒯, 3}; k...) where {𝒯}
     _colors = Makie.RGB{𝒯}[]
@@ -80,7 +84,7 @@ end
 ####################################################################################################
 function plot_fod(model::TMC; k...)
     f = Figure(backgroundcolor = :black)
-    lscene = LScene(f[1,1], scenekw = (lights = [
+    lscene = LScene(f[1, 1], scenekw = (lights = [
                             AmbientLight(RGBf(1, 1, 1)), 
                             DirectionalLight(RGBf(1, 1, 1), Vec3f(-1, 0, 1)),
                             DirectionalLight(RGBf(1, 1, 1), Vec3f(-1, 0, -1))
@@ -96,15 +100,17 @@ $(SIGNATURES)
 Plot the the ODF with glyphs.
 
 ## See also
-- `plot_fod(model; kwargs...)`
+- `plot_fod(model; kwargs...)` for an out-of-place method with same parameters.
 
 ## Arguments
+- `ax` GLMakie scene
 - `model::TMC`
-- `I, J, K` range for displaying the ODF. Some of them can be a single element, like `K = 40:40`.
-- `radius` radius of the glyph.
-- `st = 4` stride, only show one over `st` glyph in each direction.
 
 ## Optional arguments
+- `I, J, K`: range for displaying the ODF. Some of them can be a single element, like `K = 40:40`.
+- `radius`: radius of the glyph.
+- `st = 4`: stride, only show one over `st` glyph in each direction.
+
 """
 function plot_fod!(ax, model::TMC{𝒯} ; 
                     n_sphere = 10,
@@ -215,7 +221,7 @@ Plot a slice of the data.
 """
 function plot_slice(model; k...)
     f = Figure(backgroundcolor = :black, size = (1000, 1200))
-    sc = LScene(f[1,1], scenekw = (lights = [
+    sc = LScene(f[1, 1], scenekw = (lights = [
                             AmbientLight(RGBf(1, 1, 1)), 
                             DirectionalLight(RGBf(1, 1, 1), Vec3f(-1, 0, 1)),
                             DirectionalLight(RGBf(1, 1, 1), Vec3f(-1, 0, -1))

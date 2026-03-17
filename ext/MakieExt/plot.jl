@@ -26,7 +26,7 @@ end
 """
 $(SIGNATURES)
 
-Add locla frame to the scene `sc`.
+Add local frame to the scene `sc`.
 """
 function add_frame!(sc; x0 = zeros(3), r = 1, k...)
     lines!(sc, Point3.([x0, x0 .+ [r, 0, 0]]); color = :red, k...)
@@ -107,10 +107,9 @@ Plot the the ODF with glyphs.
 - `model::TMC`
 
 ## Optional arguments
-- `I, J, K`: range for displaying the ODF. Some of them can be a single element, like `K = 40:40`.
+- `I, J, K`: range for displaying the fODFs. Some of them can be a single element, like `K = 40:40`.
 - `radius`: radius of the glyph.
 - `st = 4`: stride, only show one over `st` glyph in each direction.
-
 """
 function plot_fod!(ax, model::TMC{𝒯} ; 
                     n_sphere = 10,

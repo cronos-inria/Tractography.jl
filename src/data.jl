@@ -3,16 +3,20 @@ $(TYPEDEF)
 
 Structure to hold the affine transform from the real world to voxel coordinates.
 
-# Fields
+# Internal fields
 $(TYPEDFIELDS)
 
 # Methods
-- see `transform(tf::Transform, x) `
+- `transform(tf::Transform, x)` return the linear transform `tf.S * x`
+- `transform_inv(tf::Transform, x)` return the inverse linear transform `tf.Sinv * x`
+
+# Constructor
+- `Transform(I(4), zeros(3))`. For performance reasons, you should pass static arrays, for example using `StaticArrays.jl`.
 """
 struct Transform{𝒯s, 𝒯t}
-    "Forward transform."
+    "Forward linear transform."
     S::𝒯s
-    "Inverse transform."
+    "Inverse linear transform."
     Sinv::𝒯s
     "Translation."
     T::𝒯t
@@ -22,18 +26,21 @@ end
 @inline transform(tf::Transform, x::SA.SVector{3}) = transform(tf, SA.SVector(x..., 1)) # for plotting
 @inline transform_inv(tf::Transform, x) = tf.Sinv * x
 
+Transform(S::AbstractArray, T::AbstractVector) = Transform(S, pinv(S), T)
+
 """
 $(TYPEDEF)
 
 Structure to hold FOD data.
 
-# Fields
+# Internal fields
 $(TYPEDFIELDS)
 
 # Methods
 - `get_lmax(::FODData)` returns the max `l` coordinate in of spherical harmonics.
 - `size(::FODData)` returns the size of the data.
 - `get_range(::FODData)` returns the range of the data in the real world coordinates.
+- `is_normalized(::FODData)` return whether the data is normalized.
 """
 struct FODData{𝒯, 𝒯d, 𝒯s, 𝒯t}
     "filename from which the (fod) data is read."
@@ -49,6 +56,8 @@ struct FODData{𝒯, 𝒯d, 𝒯s, 𝒯t}
 end
 
 """
+$(TYPEDSIGNATURES)
+
 max `l` coordinate in of spherical harmonics.
 """
 @inline get_lmax(foddata::FODData) = foddata.lmax
@@ -60,6 +69,11 @@ _my_typeof(x) = typeof(x)
 _my_typeof(x::NIfTI.NIVolume) = typeof(x.raw)
 is_normalized(foddata) = foddata.normalized
 
+"""
+$(TYPEDSIGNATURES)
+
+Returns the range of the data in the real world coordinates
+"""
 function get_range(foddata::FODData)
     nx, ny, nz, nt = size(foddata)
     lx, ly, lz = transform(foddata, SA.SVector(1, 1, 1))
@@ -76,11 +90,16 @@ Constructor for `FODData` based on Array data and transform.
 
 ## Arguments
 - `data::AbstractArray{𝒯, 4}`
+- `S` linear mapping for the coordinate transform. It will be passed to `Transform(S, T)`.
+- `T` translation for the coordinate transform. It will be passed to `Transform(S, T)`.
+- `normalize_it (= true)` the raw spherical harmonics are scaled so that the zero spherical harmonic coefficient is one (or zero).
+
+## Keyword arguments
+- `file_name (= "None")` path to data.
 """
-function FODData(file_name, data::AbstractArray{𝒯, 4}, S::𝒯s, T::𝒯t, normalize_it::Bool) where {𝒯, 𝒯s, 𝒯t}
-    Sinv = pinv(S)
+function FODData(data::AbstractArray{𝒯, 4}, S::𝒯s, T::𝒯t, normalize_it::Bool; file_name = "None") where {𝒯, 𝒯s, 𝒯t}
     lmax = get_lmax_from_fod_length(size(_get_array(data), 4))
-    FODData{_my_typeof(data), typeof(data), 𝒯s, 𝒯t}(file_name, data, lmax, Transform(S, Sinv, T), normalize_it)
+    FODData{_my_typeof(data), typeof(data), 𝒯s, 𝒯t}(file_name, data, lmax, Transform(S, T), normalize_it)
 end
 @inline transform(ni::FODData, x) = transform(ni.transform, x)
 @inline transform_inv(ni::FODData, x) = transform_inv(ni.transform, x)
@@ -88,16 +107,21 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Constructor for `FODData` based on NII file.
+Constructor for `FODData` based on a NII file.
 Read a `.nii.gz` or a `.nii` file passed as a `String`.
-
-The raw spherical harmonics are scaled so that the zero spherical harmonic coefficient is one (or zero).
 
 You can display more information using 
 
 ```
 show(stdout, ni; full = true)
 ```
+
+## Arguments
+- `file_name` path to a nii file.
+
+## Keyword arguments
+- `normalize_it (= true)` the raw spherical harmonics are scaled so that the zero spherical harmonic coefficient is one (or zero).
+- the additional keyword arguments are passed to `NIfTI.niread`.
 
 ## Output
 
@@ -119,6 +143,11 @@ function FODData(file::String; normalize_it::Bool = true, k...)
     return FODData(file, data, S, T, normalize_it)
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Normalize the data so that the first coefficient belongs to {0, 1}.
+"""
 function _normalize_sph_data!(data)
     nx,ny,nz, = size(data.raw)
     Threads.@threads for k=1:nz

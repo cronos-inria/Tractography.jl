@@ -127,8 +127,8 @@ show(stdout, ni; full = true)
 
 It returns a `FODData` struct.
 """
-function FODData(file::String; normalize_it::Bool = true, k...) 
-    data = niread(file; k...)
+function FODData(file_name::String; normalize_it::Bool = true, k...) 
+    data = niread(file_name; k...)
     # we normalize the ODF to have mass one
     if ~all(x-> x >= 0, data.raw[:,:,:,1]) 
         @warn "Some zero SH coefficients are negative!\nPutting them to zero"
@@ -140,7 +140,7 @@ function FODData(file::String; normalize_it::Bool = true, k...)
     A = NIfTI.getaffine(data.header)
     S = SA.@SMatrix [A[i, j] for i = 1:4, j = 1:4]
     T = SA.@SVector [A[i, end] for i = 1:3]
-    return FODData(file, data, S, T, normalize_it)
+    return FODData(data, S, T, normalize_it; file_name)
 end
 
 """

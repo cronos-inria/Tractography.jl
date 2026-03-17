@@ -134,7 +134,7 @@ function FODData(file_name::String; normalize_it::Bool = true, k...)
         @warn "Some zero SH coefficients are negative!\nPutting them to zero"
     end
     if normalize_it
-        _normalize_sph_data!(data)
+        _normalize_data!(data)
     end
     @debug size(data) data.header
     A = NIfTI.getaffine(data.header)
@@ -148,7 +148,7 @@ $(TYPEDSIGNATURES)
 
 Normalize the data so that the first coefficient belongs to {0, 1}.
 """
-function _normalize_sph_data!(data)
+function _normalize_data!(data)
     nx,ny,nz, = size(data.raw)
     Threads.@threads for k=1:nz
         for j=1:ny

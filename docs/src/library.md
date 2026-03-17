@@ -19,7 +19,7 @@ Tractography.from_fod
 Tractography.from_mask
 ```
 
-## [Spherical harmonics evaluation strategy](@id sheval)
+## [fODF evaluation strategy](@id sheval)
 
 ```@docs
 Tractography.PlottingSH
@@ -27,6 +27,10 @@ Tractography.PlottingSH
 
 ```@docs
 Tractography.PreComputeAllFOD
+```
+
+```@docs
+Tractography.DirectSH
 ```
 
 ## Models

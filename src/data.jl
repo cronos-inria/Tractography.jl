@@ -133,7 +133,7 @@ $(TYPEDSIGNATURES)
 
 Constructor for `FODData` based on Array data and trivial transform.
 """
-FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool) where {𝒯} = FODData(data, SMatrix{4,4,𝒯}(I(4)), SVector(zeros(𝒯, 3)))
+FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool) where {𝒯} = FODData(data, SA.SMatrix{4, 4, 𝒯}(I(4)), SA.SVector{3, 𝒯}(zeros(𝒯, 3)), normalize_it)
 
 @inline transform(ni::FODData, x) = transform(ni.transform, x)
 @inline transform_inv(ni::FODData, x) = transform_inv(ni.transform, x)
@@ -199,18 +199,18 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function Base.show(io::IO, ni::FODData{T, Tp}; full::Bool = false, prefix = "") where {T, Tp} 
+function Base.show(io::IO, foddata::FODData{T, Tp}; full::Bool = false, prefix = "") where {T, Tp} 
     printstyled(prefix, Tp, "\n", bold = true, color = :cyan)
-    println(prefix * " ├─ File name   = ", ni.filename)
-    println(prefix * " ├─ lmax (SH)   = ", ni.lmax)
-    println(prefix * " ├─ Dimensions  = ", size(ni.data))
-    println(prefix * " ├─ normalized  = ", ni.normalized)
-    if ni.data isa NIfTI.NIVolume
-        println(prefix * " ├─ Voxel size  = ", ni.data.header.pixdim[1:4])
-        println(prefix * " ├─ Orientation = ", NIfTI.orientation(ni.data))
+    println(prefix * " ├─ File name   = ", foddata.filename)
+    println(prefix * " ├─ lmax (SH)   = ", foddata.lmax)
+    println(prefix * " ├─ Dimensions  = ", size(foddata.data))
+    println(prefix * " ├─ normalized  = ", foddata.normalized)
+    if foddata.data isa NIfTI.NIVolume
+        println(prefix * " ├─ Voxel size  = ", foddata.data.header.pixdim[1:4])
+        println(prefix * " ├─ Orientation = ", NIfTI.orientation(foddata.data))
     end
     println(prefix * " └─ Transform (s_row) = ⋯")
     if full
-        ni.transform.S |> display
+        foddata.transform.S |> display
     end
 end

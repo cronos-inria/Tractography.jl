@@ -178,7 +178,7 @@ $(TYPEDEF)
 
 Tractography Markov Chain (TMC).
 
-# Fields (with default values):
+# Internal fields (with default values):
 $(TYPEDFIELDS)
 
 # Methods
@@ -188,7 +188,7 @@ $(TYPEDFIELDS)
 - `eltype(model)` return the scalar type of the data (default Float64).
 - `get_lmax(model)` return the max `l` coordinate in of spherical harmonics.
 
-# Constructors (use the fields!)
+# Constructors (pass the internal fields!)
 - `TMC()`
 - `TMC(Δt = 0.1f0)` for a Float32 TMC
 - `TMC(Δt = 0.1, proba_min = 0.)` for a Float64 TMC. You need to specify both fields `Δt` and `proba_min`
@@ -199,7 +199,7 @@ $(TYPEDFIELDS)
     Δt::𝒯 = 0.1f0
     "Spherical harmonics evaluation algorithm. Can be `FibonacciSH(), PreComputeAllFOD()`."
     evaluation_algo::𝒯alg = PreComputeAllFOD()
-    "ODF data from nifti file. Must be the list of ODF in the base of spherical harmonics. Hence, it should be an (abstract) 4d array."
+    "ODF data, typically from nifti file but can be passed as an Array. Must be the list of ODF in the base of spherical harmonics. Hence, it should be an (abstract) 4d array."
     foddata::𝒯d = nothing
     "Cone function to restrict angle diffusion. You can use a `Cone` or a custom function `(d1, d2) -> return_a_boolean`."
     cone::𝒯C = Cone(90f0)

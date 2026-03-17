@@ -41,6 +41,15 @@ $(TYPEDFIELDS)
 - `size(::FODData)` returns the size of the data.
 - `get_range(::FODData)` returns the range of the data in the real world coordinates.
 - `is_normalized(::FODData)` return whether the data is normalized.
+
+## Constructors
+
+In the following, `data` has shape `nx x ny x nz x nt`.
+
+- `FODData(data::AbstractArray{𝒯, 4}, tranform::Transform, normalize_it::Bool; file_name = "None")`.
+- `FODData(data::AbstractArray{𝒯, 4}, S, T, normalize_it::Bool; file_name = "None")`.
+- `FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool)` uses a trivial transform.
+- `FODData(file_name::String; normalize_it::Bool = true, k...)` the transform is extracted from the nii file.
 """
 struct FODData{𝒯, 𝒯d, 𝒯s, 𝒯t}
     "filename from which the (fod) data is read."
@@ -90,6 +99,24 @@ Constructor for `FODData` based on Array data and transform.
 
 ## Arguments
 - `data::AbstractArray{𝒯, 4}`
+- `transform::Transform` affine mapping for the coordinate transform.
+- `normalize_it (= true)` the raw spherical harmonics are scaled so that the zero spherical harmonic coefficient is one (or zero).
+
+## Keyword arguments
+- `file_name (= "None")` path to data.
+"""
+function FODData(data::AbstractArray{𝒯, 4}, tranform::Transform{𝒯s, 𝒯t}, normalize_it::Bool; file_name = "None") where {𝒯, 𝒯s, 𝒯t}
+    lmax = get_lmax_from_fod_length(size(_get_array(data), 4))
+    FODData{_my_typeof(data), typeof(data), 𝒯s, 𝒯t}(file_name, data, lmax, tranform, normalize_it)
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Constructor for `FODData` based on Array data and transform.
+
+## Arguments
+- `data::AbstractArray{𝒯, 4}`
 - `S` linear mapping for the coordinate transform. It will be passed to `Transform(S, T)`.
 - `T` translation for the coordinate transform. It will be passed to `Transform(S, T)`.
 - `normalize_it (= true)` the raw spherical harmonics are scaled so that the zero spherical harmonic coefficient is one (or zero).
@@ -98,9 +125,16 @@ Constructor for `FODData` based on Array data and transform.
 - `file_name (= "None")` path to data.
 """
 function FODData(data::AbstractArray{𝒯, 4}, S::𝒯s, T::𝒯t, normalize_it::Bool; file_name = "None") where {𝒯, 𝒯s, 𝒯t}
-    lmax = get_lmax_from_fod_length(size(_get_array(data), 4))
-    FODData{_my_typeof(data), typeof(data), 𝒯s, 𝒯t}(file_name, data, lmax, Transform(S, T), normalize_it)
+    FODData(data, Transform(S, T), normalize_it; file_name)
 end
+
+"""
+$(TYPEDSIGNATURES)
+
+Constructor for `FODData` based on Array data and trivial transform.
+"""
+FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool) where {𝒯} = FODData(data, SMatrix{4,4,𝒯}(I(4)), SVector(zeros(𝒯, 3)))
+
 @inline transform(ni::FODData, x) = transform(ni.transform, x)
 @inline transform_inv(ni::FODData, x) = transform_inv(ni.transform, x)
 

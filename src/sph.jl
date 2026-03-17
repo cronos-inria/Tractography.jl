@@ -100,7 +100,10 @@ $(TYPEDSIGNATURES)
 
 Computes S = ∑Vₗₘ⋅Yₗₘ(θ, ϕ) and its partial derivatives ∂pS and ∂tS.
 
-Returns (S, ∂pS, ∂tS)
+Returns (S, ∂pS, ∂tS).
+
+!!! warning "Limitation"
+    This is currently limited to `lmax<=8`
 """
 function ishtmtx_dot(phi::𝒯, 
                      theta::𝒯,

@@ -306,14 +306,14 @@ end
 end
 
 @inline function get_voxel(tf::Transform, x_native)
-    # x_native is an native space, we want it in voxel space
+    # x_native is in native space, we want it in voxel space
     return transform_inv(tf, SA.SVector(x_native[1], x_native[2], x_native[3], 1))
 end
 
 @inline function get_voxel_index(x_voxel)
     # we use the hack unsafe_trunc instead of Int(round(...)) because Metal 
     # doesn't provide a device-side allocator.
-    # +1 is for Julia array indexing which starts at 1
+    # `+ 1` is for Julia array indexing which starts at 1
     @inbounds voxel_index = (unsafe_trunc(UInt32, round(x_voxel[1], RoundNearest) + 1),
                              unsafe_trunc(UInt32, round(x_voxel[2], RoundNearest) + 1),
                              unsafe_trunc(UInt32, round(x_voxel[3], RoundNearest) + 1))

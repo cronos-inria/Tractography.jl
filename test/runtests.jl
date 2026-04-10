@@ -7,4 +7,5 @@ using Test
     include("data.jl")
     include("sh.jl")
     include("plot.jl")
+    include("test_drift_expression.jl")
 end

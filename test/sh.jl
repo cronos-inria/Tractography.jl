@@ -1,4 +1,4 @@
-using Tractography, Test
+using Tractography, Test, LinearAlgebra
 const TG = Tractography
 
 
@@ -276,7 +276,7 @@ function ishtmtx(phi::𝒯,
     return nothing
 end
 
-begin
+let
     _Y1 = zeros(Float32, 45); _Y2 = zero(_Y1); _Y3 = zero(_Y1); _V = rand(Float32, 45)
     _theta = rand(Float32); _phi = rand(Float32); _Y1 .= 0
     ishtmtx(_phi, _theta, _Y1, _Y2, _Y3)

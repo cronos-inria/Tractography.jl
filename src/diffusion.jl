@@ -13,7 +13,7 @@ function Exp𝕊²(p, X, t)
         return p
     end
     s, c = sincos(t * n)
-    return c .* p .+ X .* (s / n)
+    return c .* p .+ (s / n) .* X
 end
 ####################################################################################################
 function init(model::TMC{𝒯, DirectSH}, 
@@ -171,7 +171,7 @@ function sample!(streamlines,
     return streamlines
 end
 
-KA.@kernel inbounds=false function _sample_kernel_diffusion!(
+KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                             streamlines::AbstractArray{𝒯, 3},
                             streamlines_length::AbstractArray{UInt32, 1},
                             alg::AbstractSDESampler{𝒯},
@@ -192,7 +192,7 @@ KA.@kernel inbounds=false function _sample_kernel_diffusion!(
                             @Const(γn::𝒯),
                             @Const(dΩ),
                             nx, ny, nz,
-                            _precomputed_odf::Val{precomputed_odf},
+                            ::Val{precomputed_odf},
                             ::Val{save_full_streamline},
                             ) where {𝒯, save_full_streamline, precomputed_odf}
     # index of the streamline being computed
@@ -245,7 +245,7 @@ KA.@kernel inbounds=false function _sample_kernel_diffusion!(
     iₛₐᵥₑ = one(UInt32)
 
     # Riemannian Langevin algorithm [1]
-    # Bharath, Karthik, Karthik Bharath, Alexander Lewis, et al. Sampling and Estimation on Manifolds Using the Langevin Diﬀusion. n.d.
+    # Karthik Bharath, Alexander Lewis, et al. Sampling and Estimation on Manifolds Using the Langevin Diﬀusion. n.d.
     # X_{n+1}^h =\exp_{X_n^h}(  h/2⋅∇ E(X_n^h) + √h ⋅ g^{-1/2}(X_n^h) ⋅ ξ_{n+1})
 
 
@@ -284,8 +284,9 @@ KA.@kernel inbounds=false function _sample_kernel_diffusion!(
             st, ct = sincos(θᵢ)
             sp, cp = sincos(ϕᵢ)
             # tangent vectors in polar coordinates
-            # recall D = (st * cp, st * sp, ct), error ~ 1e-7
+            # recall D = (st * cp, st * sp, ct), we have error ~ 1e-7
 
+            # local basis
             eθ = SA.SVector(ct * cp, ct * sp, -st )
             eϕ = SA.SVector(-sp, cp, 0) # remove the sin(θ) from eϕ because we removed it in Fϕ
 
@@ -293,7 +294,7 @@ KA.@kernel inbounds=false function _sample_kernel_diffusion!(
 
             # 19-AAP1507
             if is_adaptive(alg)
-                hx = dt * 2 / min(max(1f0, norm(drift)/F)^2, 10)
+                hx = dt * 2 / min(max(1, norm(drift)/F)^2, 10)
             else
                 hx = dt
             end

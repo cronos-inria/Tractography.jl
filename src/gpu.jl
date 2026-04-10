@@ -155,7 +155,7 @@ function launch_kernel(nthreads = 8;
 end
 
 # this type annotation may help KA
-KA.@kernel inbounds=false function _sample_kernel!(
+KA.@kernel inbounds=true function _sample_kernel!(
                             streamlines::AbstractArray{𝒯, 3},
                             streamlines_length::AbstractArray{UInt32, 1},
                             @Const(alg::Union{Probabilistic, Deterministic}),

@@ -95,61 +95,192 @@ function get_vector_of_sh(angles::AbstractVector{Tuple{𝒯, 𝒯}}, lmax, der::
     Yₗₘ
 end
 
+const YLM_DP_RHS = Any[
+    :(0f0),
+
+    :(0.54627421529f0 * st2 * 2f0 * c2p),
+    :(-1.0925484305920792f0 * stct * cp),
+    :(0f0),
+    :(1.0925484305920792f0 * stct * sp),
+    :(-0.54627421529f0 * st2 * 2f0 * s2p),
+
+    :(0.62583573544f0 * st4 * 4f0 * c4p),
+    :(-1.77013076978f0 * st3 * ct * 3f0 * c3p),
+    :(0.47308734787f0 * st2 * (7f0 * ct2 - 1f0) * 2f0 * c2p),
+    :(-0.66904654355f0 * stct * (7f0 * ct2 - 3f0) * cp),
+    :(0f0),
+    :(0.66904654355f0 * stct * (7f0 * ct2 - 3f0) * sp),
+    :(-0.47308734787f0 * st2 * (7f0 * ct2 - 1f0) * 2f0 * s2p),
+    :(1.77013076978f0 * st3 * ct * 3f0 * s3p),
+    :(-0.62583573544f0 * st4 * 4f0 * s4p),
+
+    :(0.68318410519f0 * st6 * 6f0 * c6p),
+    :(-2.36661916223f0 * st5 * ct * 5f0 * c5p),
+    :(0.50456490072f0 * st4 * (11f0 * ct2 - 1f0) * 4f0 * c4p),
+    :(-0.92120525951f0 * st3 * (11f0 * ct3 - 3f0 * ct) * 3f0 * c3p),
+    :(0.46060262975f0 * st2 * (33f0 * ct4 - 18f0 * ct2 + 1f0) * 2f0 * c2p),
+    :(-0.58262136251f0 * st * (33f0 * ct5 - 30f0 * ct3 + 5f0 * ct) * cp),
+    :(0f0),
+    :(0.58262136251f0 * st * (33f0 * ct5 - 30f0 * ct3 + 5f0 * ct) * sp),
+    :(-0.46060262975f0 * st2 * (33f0 * ct4 - 18f0 * ct2 + 1f0) * 2f0 * s2p),
+    :(0.92120525951f0 * st3 * (11f0 * ct3 - 3f0 * ct) * 3f0 * s3p),
+    :(-0.50456490072f0 * st4 * (11f0 * ct2 - 1f0) * 4f0 * s4p),
+    :(2.36661916223f0 * st5 * ct * 5f0 * s5p),
+    :(-0.68318410519f0 * st6 * 6f0 * s6p),
+
+    :(0.72892666017f0 * st8 * 8f0 * c8p),
+    :(-2.9157066407f0 * st7 * ct * 7f0 * c7p),
+    :(0.53233276606f0 * st6 * (15f0 * ct2 - 1f0) * 6f0 * c6p),
+    :(-3.4499106221f0 * st5 * (5f0 * ct3 - ct) * 5f0 * c5p),
+    :(0.47841652475f0 * st4 * (65f0 * ct4 - 26f0 * ct2 + 1f0) * 4f0 * c4p),
+    :(-1.2352661553f0 * st3 * (39f0 * ct5 - 26f0 * ct3 + 3f0 * ct) * 3f0 * c3p),
+    :(0.45615225843f0 * st2 * (143f0 * ct6 - 143f0 * ct4 + 33f0 * ct2 - 1f0) * 2f0 * c2p),
+    :(-0.10904124589f0 * st * (715f0 * ct7 - 1001f0 * ct5 + 385f0 * ct3 - 35f0 * ct) * cp),
+    :(0f0),
+    :(0.10904124589f0 * st * (715f0 * ct7 - 1001f0 * ct5 + 385f0 * ct3 - 35f0 * ct) * sp),
+    :(-0.45615225843f0 * st2 * (143f0 * ct6 - 143f0 * ct4 + 33f0 * ct2 - 1f0) * 2f0 * s2p),
+    :(1.2352661553f0 * st3 * (39f0 * ct5 - 26f0 * ct3 + 3f0 * ct) * 3f0 * s3p),
+    :(-0.47841652475f0 * st4 * (65f0 * ct4 - 26f0 * ct2 + 1f0) * 4f0 * s4p),
+    :(3.4499106221f0 * st5 * (5f0 * ct3 - ct) * 5f0 * s5p),
+    :(-0.53233276606f0 * st6 * (15f0 * ct2 - 1f0) * 6f0 * s6p),
+    :(2.9157066407f0 * st7 * ct * 7f0 * s7p),
+    :(-0.72892666017f0 * st8 * 8f0 * s8p),
+]
+
+# ------------------------------------------------------------------
+# 2) Transformation symbolique "division par st"
+# ------------------------------------------------------------------
+
+const _DIV_ST_RULES = Dict{Symbol,Any}(
+    :st   => :(one(𝒯)),
+    :st2  => :st,
+    :st3  => :st2,
+    :st4  => :st3,
+    :st5  => :st4,
+    :st6  => :st5,
+    :st7  => :st6,
+    :st8  => :st7,
+    :stct => :ct,
+)
+
+function _divide_by_st(ex)
+    if ex isa Symbol
+        return get(_DIV_ST_RULES, ex, ex)
+    elseif ex isa Expr
+        return Expr(ex.head, map(_divide_by_st, ex.args)...)
+    else
+        return ex
+    end
+end
+
+# ------------------------------------------------------------------
+# 3) Génération du bloc d'accumulation
+# ------------------------------------------------------------------
+
+function _make_ylm_dp_block(acc::Symbol; divide_by_st::Bool)
+    rhs_list = divide_by_st ? map(_divide_by_st, YLM_DP_RHS) : YLM_DP_RHS
+
+    stmts = Any[:(n = 1)]
+    for rhs in rhs_list
+        push!(stmts, quote
+            $acc += $(rhs) * V[n]
+            n += 1
+        end)
+    end
+    return Expr(:block, stmts...)
+end
+
+# ------------------------------------------------------------------
+# 4) Génération de deux méthodes spécialisées
+# ------------------------------------------------------------------
+
+for DIV in (false, true)
+    body = _make_ylm_dp_block(:ylm_dp; divide_by_st=DIV)
+
+    @eval @inline function _accum_ylm_dp(::Val{$DIV},
+                                         V::AbstractVector{𝒯},
+                                         st::𝒯, ct::𝒯,
+                                         st2::𝒯, st3::𝒯, st4::𝒯, st5::𝒯, st6::𝒯, st7::𝒯, st8::𝒯,
+                                         ct2::𝒯, ct3::𝒯, ct4::𝒯, ct5::𝒯, ct6::𝒯, ct7::𝒯, ct8::𝒯,
+                                         stct::𝒯,
+                                         sp::𝒯, cp::𝒯,
+                                         s2p::𝒯, c2p::𝒯,
+                                         s3p::𝒯, c3p::𝒯,
+                                         s4p::𝒯, c4p::𝒯,
+                                         s5p::𝒯, c5p::𝒯,
+                                         s6p::𝒯, c6p::𝒯,
+                                         s7p::𝒯, c7p::𝒯,
+                                         s8p::𝒯, c8p::𝒯,
+                                        ) where {𝒯}
+        ylm_dp = zero(𝒯)
+        @inbounds begin
+            $body
+        end
+        return ylm_dp
+    end
+end
+
 """
 $(TYPEDSIGNATURES)
 
-Computes S = ∑Vₗₘ⋅Yₗₘ(θ, ϕ) and its partial derivatives ∂pS and ∂tS.
+Computes S = ∑Vₗₘ⋅Yₗₘ(θ, ϕ) and its partial derivatives ∂ϕS and ∂θS.
 
-Returns (S, ∂pS, ∂tS).
+Returns (S, ∂ϕS, ∂θS).
 
 !!! warning "Limitation"
     This is currently limited to `lmax<=8`
 """
-function ishtmtx_dot(phi::𝒯, 
-                     theta::𝒯,
-                     V::AbstractVector{𝒯},
-                     ) where {𝒯}
+@inline ishtmtx_dot(phi::𝒯, theta::𝒯, V::AbstractVector{𝒯}) where {𝒯} =
+    _ishtmtx_dot_impl(Val(false), phi, theta, V)
+
+"""
+$(TYPEDSIGNATURES)
+
+Computes S = ∑Vₗₘ⋅Yₗₘ(θ, ϕ) and its partial derivatives ∂ϕS and ∂θS.
+
+Returns (S, ∂ϕS/sin(θ), ∂θS).
+
+!!! warning "Limitation"
+    This is currently limited to `lmax<=8`
+
+!!! danger "Internal function"
+    The derivative ∂ϕS is returned divided by sin(θ). This is made possible because we only consider spherical harmonics with even l.
+"""
+@inline ishtmtx_dot_divst(phi::𝒯, theta::𝒯, V::AbstractVector{𝒯}) where {𝒯} =
+    _ishtmtx_dot_impl(Val(true), phi, theta, V)
+
+function _ishtmtx_dot_impl(::Val{DIV},
+                           phi::𝒯,
+                           theta::𝒯,
+                           V::AbstractVector{𝒯},
+                          ) where {DIV,𝒯}
 
     st, ct = sincos(theta)
     sp, cp = sincos(phi)
 
-    if false
-        # sin(m*phi), cos(m*phi)
-        s2p, c2p = sincos(2 * phi)
-        s3p, c3p = sincos(3 * phi)
-        s4p, c4p = sincos(4 * phi)
-        s5p, c5p = sincos(5 * phi)
-        s6p, c6p = sincos(6 * phi)
-        s7p, c7p = sincos(7 * phi)
-        s8p, c8p = sincos(8 * phi)
-    else
+    s, c = sp, cp
 
-        s, c = sp, cp
+    s, c = s * cp + c * sp, c * cp - s * sp
+    s2p, c2p = s, c
 
-        s, c = s * cp + c * sp, c * cp - s * sp
-        s2p, c2p = s, c
+    s, c = s * cp + c * sp, c * cp - s * sp
+    s3p, c3p = s, c
 
-        s, c = s * cp + c * sp, c * cp - s * sp
-        s3p, c3p = s, c
+    s, c = s * cp + c * sp, c * cp - s * sp
+    s4p, c4p = s, c
 
-        s, c = s * cp + c * sp, c * cp - s * sp
-        s4p, c4p = s, c
+    s, c = s * cp + c * sp, c * cp - s * sp
+    s5p, c5p = s, c
 
-        s, c = s * cp + c * sp, c * cp - s * sp
-        s5p, c5p = s, c
+    s, c = s * cp + c * sp, c * cp - s * sp
+    s6p, c6p = s, c
 
-        s, c = s * cp + c * sp, c * cp - s * sp
-        s6p, c6p = s, c
+    s, c = s * cp + c * sp, c * cp - s * sp
+    s7p, c7p = s, c
 
-        s, c = s * cp + c * sp, c * cp - s * sp
-        s7p, c7p = s, c
+    s, c = s * cp + c * sp, c * cp - s * sp
+    s8p, c8p = s, c
 
-        s, c = s * cp + c * sp, c * cp - s * sp
-        s8p, c8p = s, c
-    end
-
-
-    # Precompute powers
     st2 = st * st
     st3 = st2 * st
     st4 = st3 * st
@@ -168,7 +299,8 @@ function ishtmtx_dot(phi::𝒯,
 
     stct = st * ct
 
-    ylm = ylm_dp = ylm_dt = zero(𝒯)
+    ylm    = zero(𝒯)
+    ylm_dt = zero(𝒯)
 
     @inbounds begin
         # https://en.wikipedia.org/wiki/Table_of_spherical_harmonics
@@ -230,58 +362,6 @@ function ishtmtx_dot(phi::𝒯,
         ylm += (-2.9157066407f0 * st7 * ct * c7p) * V[n]; n += 1
         ylm += (0.72892666017f0 * st8 * c8p) * V[n]; n += 1
 
-        # --- Ylm derivative with respect to phi (ylm_dp) ---
-        n = 1
-        ylm_dp += (0f0) * V[n]; n += 1
-
-        ylm_dp += (0.54627421529f0 * st2 * 2f0 * c2p) * V[n]; n += 1
-        ylm_dp += (-1.0925484305920792f0 * stct * cp) * V[n]; n += 1
-        ylm_dp += (0f0) * V[n]; n += 1
-        ylm_dp += (1.0925484305920792f0 * stct * sp) * V[n]; n += 1
-        ylm_dp += (-0.54627421529f0 * st2 * 2f0 * s2p) * V[n]; n += 1
-
-        ylm_dp += (0.62583573544f0 * st4 * 4f0 * c4p) * V[n]; n += 1
-        ylm_dp += (-1.77013076978f0 * st3 * ct * 3f0 * c3p) * V[n]; n += 1
-        ylm_dp += (0.47308734787f0 * st2 * (7f0 * ct2 - 1f0) * 2f0 * c2p) * V[n]; n += 1
-        ylm_dp += (-0.66904654355f0 * stct * (7f0 * ct2 - 3f0) * cp) * V[n]; n += 1
-        ylm_dp += (0) * V[n]; n += 1
-        ylm_dp += (0.66904654355f0 * stct * (7f0 * ct2 - 3f0) * sp) * V[n]; n += 1
-        ylm_dp += (-0.47308734787f0 * st2 * (7f0 * ct2 - 1f0) * 2f0 * s2p) * V[n]; n += 1
-        ylm_dp += (1.77013076978f0 * st3 * ct * 3f0 * s3p) * V[n]; n += 1
-        ylm_dp += (-0.62583573544f0 * st4 * 4f0 * s4p) * V[n]; n += 1
-
-        ylm_dp += (0.68318410519f0 * st6 * 6f0 * c6p) * V[n]; n += 1
-        ylm_dp += (-2.36661916223f0 * st5 * ct * 5f0 * c5p) * V[n]; n += 1
-        ylm_dp += (0.50456490072f0 * st4 * (11f0 * ct2 - 1f0) * 4f0 * c4p) * V[n]; n += 1
-        ylm_dp += (-0.92120525951f0 * st3 * (11f0 * ct3 - 3f0 * ct) * 3f0 * c3p) * V[n]; n += 1
-        ylm_dp += (0.46060262975f0 * st2 * (33f0 * ct4 - 18f0 * ct2 + 1f0) * 2f0 * c2p) * V[n]; n += 1
-        ylm_dp += (-0.58262136251f0 * st * (33f0 * ct5 - 30f0 * ct3 + 5f0 * ct) * cp) * V[n]; n += 1
-        ylm_dp += (0f0) * V[n]; n += 1
-        ylm_dp += (0.58262136251f0 * st * (33f0 * ct5 - 30f0 * ct3 + 5f0 * ct) * sp) * V[n]; n += 1
-        ylm_dp += (-0.46060262975f0 * st2 * (33f0 * ct4 - 18f0 * ct2 + 1f0) * 2f0 * s2p) * V[n]; n += 1
-        ylm_dp += (0.92120525951f0 * st3 * (11f0 * ct3 - 3f0 * ct) * 3f0 * s3p) * V[n]; n += 1
-        ylm_dp += (-0.50456490072f0 * st4 * (11f0 * ct2 - 1f0) * 4f0 * s4p) * V[n]; n += 1
-        ylm_dp += (2.36661916223f0 * st5 * ct * 5f0 * s5p) * V[n]; n += 1
-        ylm_dp += (-0.68318410519f0 * st6 * 6f0 * s6p) * V[n]; n += 1
-
-        ylm_dp += (0.72892666017f0 * st8 * 8f0 * c8p) * V[n]; n += 1
-        ylm_dp += (-2.9157066407f0 * st7 * ct * 7f0 * c7p) * V[n]; n += 1
-        ylm_dp += (0.53233276606f0 * st6 * (15f0 * ct2 - 1f0) * 6f0 * c6p) * V[n]; n += 1
-        ylm_dp += (-3.4499106221f0 * st5 * (5f0 * ct3 - ct) * 5f0 * c5p) * V[n]; n += 1
-        ylm_dp += (0.47841652475f0 * st4 * (65f0 * ct4 - 26f0 * ct2 + 1f0) * 4f0 * c4p) * V[n]; n += 1
-        ylm_dp += (-1.2352661553f0 * st3 * (39f0 * ct5 - 26f0 * ct3 + 3f0 * ct) * 3f0 * c3p) * V[n]; n += 1
-        ylm_dp += (0.45615225843f0 * st2 * (143f0 * ct6 - 143f0 * ct4 + 33f0 * ct2 - 1f0) * 2f0 * c2p) * V[n]; n += 1
-        ylm_dp += (-0.10904124589f0 * st * (715f0 * ct7 - 1001f0 * ct5 + 385f0 * ct3 - 35f0 * ct) * cp) * V[n]; n += 1
-        ylm_dp += (0f0) * V[n]; n += 1
-        ylm_dp += (0.10904124589f0 * st * (715f0 * ct7 - 1001f0 * ct5 + 385f0 * ct3 - 35f0 * ct) * sp) * V[n]; n += 1
-        ylm_dp += (-0.45615225843f0 * st2 * (143f0 * ct6 - 143f0 * ct4 + 33f0 * ct2 - 1f0) * 2f0 * s2p) * V[n]; n += 1
-        ylm_dp += (1.2352661553f0 * st3 * (39f0 * ct5 - 26f0 * ct3 + 3f0 * ct) * 3f0 * s3p) * V[n]; n += 1
-        ylm_dp += (-0.47841652475f0 * st4 * (65f0 * ct4 - 26f0 * ct2 + 1f0) * 4f0 * s4p) * V[n]; n += 1
-        ylm_dp += (3.4499106221f0 * st5 * (5f0 * ct3 - ct) * 5f0 * s5p) * V[n]; n += 1
-        ylm_dp += (-0.53233276606f0 * st6 * (15f0 * ct2 - 1f0) * 6f0 * s6p) * V[n]; n += 1
-        ylm_dp += (2.9157066407f0 * st7 * ct * 7f0 * s7p) * V[n]; n += 1
-        ylm_dp += (-0.72892666017f0 * st8 * 8f0 * s8p) * V[n]; n += 1
-
         # --- Ylm derivative with respect to theta (ylm_dt) ---
         n = 1
         ylm_dt += (0f0) * V[n]; n += 1
@@ -334,6 +414,20 @@ function ishtmtx_dot(phi::𝒯,
         ylm_dt += (-2.9157066407f0 * (7f0 * st6 * ct2 - st8) * c7p) * V[n]; n += 1
         ylm_dt += (0.72892666017f0 * 8f0 * st7 * ct * c8p) * V[n]; n += 1
     end
+
+    ylm_dp = _accum_ylm_dp(Val(DIV), V,
+                           st, ct,
+                           st2, st3, st4, st5, st6, st7, st8,
+                           ct2, ct3, ct4, ct5, ct6, ct7, ct8,
+                           stct,
+                           sp, cp,
+                           s2p, c2p,
+                           s3p, c3p,
+                           s4p, c4p,
+                           s5p, c5p,
+                           s6p, c6p,
+                           s7p, c7p,
+                           s8p, c8p)
 
     return ylm, ylm_dp, ylm_dt
 end

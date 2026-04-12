@@ -244,7 +244,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
         t_length += continue_tracking
 
         if continue_tracking
-            if precomputed_odf
+            if precomputed_odf # static, removed at compilation
                 ind_u = _device_get_angle(directions, u₁, u₂, u₃, n_angles)
                 # !! Careful here, we need to have a probability: F / ∫F
                 F  =  fodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]

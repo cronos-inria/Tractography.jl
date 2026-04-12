@@ -281,7 +281,14 @@ let
     _theta = rand(Float32); _phi = rand(Float32); _Y1 .= 0
     ishtmtx(_phi, _theta, _Y1, _Y2, _Y3)
     r1 = TG.ishtmtx_dot(_phi, _theta, _V)
+    @test (@allocated TG.ishtmtx_dot(_phi, _theta, _V)) == 0
     @test dot(_Y1, _V) ≈ r1[1]
     @test dot(_Y2, _V) ≈ r1[2]
+    @test dot(_Y3, _V) ≈ r1[3]
+
+    @test (@allocated TG.ishtmtx_dot_divst(_phi, _theta, _V)) == 0
+    r1 = TG.ishtmtx_dot_divst(_phi, _theta, _V)
+    @test dot(_Y1, _V) ≈ r1[1]
+    @test dot(_Y2, _V) ≈ r1[2] * sin(_theta)
     @test dot(_Y3, _V) ≈ r1[3]
 end

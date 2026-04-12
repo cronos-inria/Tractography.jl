@@ -74,7 +74,7 @@ streamlines_transport, tract_length = @time TG.sample(model_d, TG.Transport(;γ 
         map(x->x[2], euler_intrinsic(model_d.Δt, _t0, _p0, _eps0, nt))[1:end-2], Inf) < model_d.Δt/2
 
 # case close to the north pole
-_t0 = 0.0001; _p0 = pi*0.89
+_t0 = 0.0; _p0 = pi*0.89
 _eps0 = 0.3
 _fod, _mask = make_vector_field((2,2,2); ϵ = 𝒯(_eps0), Ty = 𝒯);
 

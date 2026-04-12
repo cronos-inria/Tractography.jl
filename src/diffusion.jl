@@ -238,12 +238,11 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     F = ∫F = Fθ = Fϕ = hx = ∂ = zero(𝒯)
     st = ct = sp = cp = zero(𝒯)
     θᵢ, ϕᵢ = euclidean_to_spherical(u₁, u₂, u₃)
-    iₛₐᵥₑ = one(UInt32)
+    iₛₐᵥₑ = one(UInt32) + 1
 
     # Riemannian Langevin algorithm [1]
     # Karthik Bharath, Alexander Lewis, et al. Sampling and Estimation on Manifolds Using the Langevin Diﬀusion. n.d.
     # X_{n+1}^h =\exp_{X_n^h}(  h/2⋅∇ E(X_n^h) + √h ⋅ g^{-1/2}(X_n^h) ⋅ ξ_{n+1})
-
 
     for iₜ = UInt32(2):nₜ
         P = SA.SVector(x₁, x₂, x₃)

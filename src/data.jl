@@ -2,9 +2,12 @@ abstract type fODFBasis end
 
 """
 The fODF are specified in the Spherical Harmonics basis.
+If `issymmetric == true`, only the even `l` are taken into account to yield symmetric fODF.
 """
-struct SphericalHarmonics <: fODFBasis end
+struct SphericalHarmonics{issymmetric} <: Abstract_fODFBasis end
+issymmetric(::SphericalHarmonics{_issymmetric}) where {_issymmetric} = _issymmetric
 
+##########################################################################################
 """
 $(TYPEDEF)
 
@@ -39,7 +42,7 @@ function Transform(S::AbstractArray, T::AbstractVector)
     end
     Transform(S, pinv(S), T)
 end
-
+##########################################################################################
 """
 $(TYPEDEF)
 
@@ -148,7 +151,7 @@ function FODData(data::AbstractArray{𝒯, 4},
                 T::𝒯t, 
                 normalize_it::Bool;
                 file_name = "None",
-                basis = SphericalHarmonics()) where {𝒯, 𝒯s, 𝒯t}
+                basis = SphericalHarmonics{true}()) where {𝒯, 𝒯s, 𝒯t}
     FODData(data, Transform(S, T), normalize_it; file_name, basis)
 end
 
@@ -157,7 +160,7 @@ $(TYPEDSIGNATURES)
 
 Constructor for `FODData` based on Array data and trivial transform.
 """
-FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool; basis = SphericalHarmonics()) where {𝒯} = 
+FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool; basis = SphericalHarmonics{true}()) where {𝒯} = 
     FODData(data, 
             SA.SMatrix{4, 4, 𝒯}(I(4)), 
             SA.SVector{3, 𝒯}(zeros(𝒯, 3)), 
@@ -191,10 +194,13 @@ show(stdout, ni; full = true)
 
 It returns a `FODData` struct.
 """
-function FODData(file_name::String; normalize_it::Bool = true, basis = SphericalHarmonics(), k...) 
+function FODData(file_name::String; 
+                normalize_it::Bool = true, 
+                basis = SphericalHarmonics{true}(), k...) 
     data = niread(file_name; k...)
     # we normalize the ODF to have mass one
-    if ~all(x-> x >= 0, data.raw[:,:,:,1]) 
+    if basis isa SphericalHarmonics && 
+        ~all(x-> x >= 0, data.raw[:,:,:,1]) 
         @warn "Some zero SH coefficients are negative!\nPutting them to zero"
     end
     if normalize_it
@@ -204,7 +210,7 @@ function FODData(file_name::String; normalize_it::Bool = true, basis = Spherical
     A = NIfTI.getaffine(data.header)
     S = SA.@SMatrix [A[i, j] for i = 1:4, j = 1:4]
     T = SA.@SVector [A[i, end] for i = 1:3]
-    return FODData(data, S, T, normalize_it; file_name)
+    return FODData(data, S, T, normalize_it; file_name, basis)
 end
 
 """
@@ -232,10 +238,12 @@ $(TYPEDSIGNATURES)
 function Base.show(io::IO, foddata::FODData{T, Tp}; full::Bool = false, prefix = "") where {T, Tp} 
     printstyled(prefix, Tp, "\n", bold = true, color = :cyan)
     println(prefix * " ├─ File name   = ", foddata.filename)
-    println(prefix * " ├─ lmax (SH)   = ", foddata.lmax)
     println(prefix * " ├─ Dimensions  = ", size(foddata.data))
-    println(prefix * " ├─ normalized  = ", foddata.normalized)
     println(prefix * " ├─ basis       = ", foddata.basis)
+    if 
+        println(prefix * " ├─ lmax (SH)   = ", foddata.lmax)
+        println(prefix * " ├─ normalized  = ", foddata.normalized)
+    end
     if foddata.data isa NIfTI.NIVolume
         println(prefix * " ├─ Voxel size  = ", foddata.data.header.pixdim[1:4])
         println(prefix * " ├─ Orientation = ", NIfTI.orientation(foddata.data))

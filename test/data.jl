@@ -6,6 +6,7 @@ TG.FODData(rand(10,10,10,10), false)
 model = TG.TMC(Δt = 0.1, proba_min = 0.0,
             foddata = TG.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz")
 )
+TG.issymmetric(model.foddata.basis)
 
 show(stdout, model.foddata; full = true)
 

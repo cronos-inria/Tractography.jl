@@ -226,12 +226,12 @@ get_array(model::TMC) = _get_array(getdata(model))
 function Base.show(io::IO, model::TMC)
     printstyled(io, "TMC with elype ", eltype(model), bold = true, color = :cyan)
     println(io, "\n ├─ Δt = ", model.Δt)
-    println(io, " ├─ minimal probability = ", model.proba_min)
+    println(io, " ├─ minimal probability     = ", model.proba_min)
     if model.cone isa Cone
-        println(io, " ├─ cone                = ", model.cone)
+        println(io, " ├─ cone                    = ", model.cone)
     end
-    println(io, " ├─ mollifier           = ", model.mollifier)
-    println(io, " ├─ evaluation of SH    = ", model.evaluation_algo)
+    println(io, " ├─ mollifier               = ", model.mollifier)
+    println(io, " ├─ evaluation of the basis = ", model.evaluation_algo)
     if model.foddata isa FODData
         println(io, " └─ data : (lmax = $(get_lmax(model)))")
         show(io, model.foddata; prefix = "      ")

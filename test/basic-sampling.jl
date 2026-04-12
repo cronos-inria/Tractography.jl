@@ -27,7 +27,7 @@ model = Tractography.TMC(Δt = 0.125f0,
             proba_min = 0.005f0,
             )
 
-Tractography._apply_mask!(model, ones(64, 64, 3))
+Tractography._apply_mask!(model, ones(Float32, 64, 64, 3))
 
 show(stdout, model)
 
@@ -36,7 +36,7 @@ Tractography.sample(model, Tractography.Connectivity(Tractography.Deterministic(
 Tractography.sample(model, Tractography.Probabilistic(), rand(Float32, 6, 2); nt = 10);
 Tractography.sample(model, Tractography.Connectivity(Tractography.Probabilistic()), rand(Float32, 6, 2); nt = 10);
 
-for eval_alg in (Tractography.PreComputeAllFOD(), Tractography.DirectSH())
+for eval_alg in (Tractography.DirectSH(), Tractography.PreComputeAllFOD())
     model_diffusion = Tractography.TMC(Δt = 0.001f0,
                 foddata = Tractography.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
                 proba_min = 0.0f0,

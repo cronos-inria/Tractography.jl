@@ -116,7 +116,7 @@ function sample!(streamlines,
                 model::TMC{𝒯}, 
                 cache::AbstractCache, 
                 alg::Union{AbstractSDESampler, Connectivity{ <: AbstractSDESampler}},
-                seeds;
+                seeds::AbstractMatrix{𝒯};
                 maxfod_start::Bool = false,
                 reverse_direction::Bool = false,
                 nthreads = 8,
@@ -290,7 +290,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
             eθ = SA.SVector(ct * cp, ct * sp, -st )
             eϕ = SA.SVector(-sp, cp, 0) # remove the sin(θ) from eϕ because we removed it in Fϕ
 
-            drift = Fθ * eθ + Fϕ * eϕ
+            drift = Fθ * eθ + (Fϕ / st) * eϕ
 
             # 19-AAP1507
             if is_adaptive(alg)

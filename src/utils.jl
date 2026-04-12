@@ -58,3 +58,49 @@ end
 ####################################################################################################
 @inline softplus(x, k = 1) = ifelse(k * x < 30, log1p(exp(k * x)) / k, x) # avoid Inf for x large
 @inline ∂softplus(x, k = 1) = 1 / (1 + exp(-k * x))
+####################################################################################################
+@inline function in_image(voxel_index₁::Integer, voxel_index₂::Integer, voxel_index₃::Integer, nx, ny, nz)
+    return 1 <= voxel_index₁ <= nx &&
+           1 <= voxel_index₂ <= ny &&
+           1 <= voxel_index₃ <= nz
+end
+
+@inline function get_voxel_index(x_voxel)
+    @inbounds voxel_index = (unsafe_trunc(UInt32, round(x_voxel[1], RoundNearest) + 1),
+                        unsafe_trunc(UInt32, round(x_voxel[2], RoundNearest) + 1),
+                        unsafe_trunc(UInt32, round(x_voxel[3], RoundNearest) + 1))
+    return voxel_index
+end
+
+@inline function get_voxel_index(tf::Transform, x_native)
+    x = transform_inv(tf, SA.SVector(x_native[1], x_native[2], x_native[3], 1))
+    return get_voxel_index(x)
+end
+
+@inline function _device_argmax(fodf::AbstractArray{𝒯, 4}, voxel₁, voxel₂, voxel₃, n::UInt32) where {𝒯}
+    _val_max = zero(𝒯)
+    ind_u = UInt32(1)
+    for ii = UInt32(1):n
+        @inbounds val = fodf[ii, voxel₁, voxel₂, voxel₃]
+        if val > _val_max
+            _val_max = val
+            ind_u = ii
+        end
+    end
+    return ind_u
+end
+
+@inline function _device_get_angle(directions::AbstractMatrix{𝒯}, u1::𝒯, u2::𝒯, u3::𝒯, n::UInt32) where {𝒯}
+    ind_u = UInt32(1); i = UInt32(2)
+    @inbounds val0 = directions[1, 1] * u1 + directions[1, 2] * u2 + directions[1, 3] * u3
+    for i = UInt32(2):n
+        @inbounds val = directions[i, 1] * u1 +
+                        directions[i, 2] * u2 +
+                        directions[i, 3] * u3
+        if val0 < val
+            val0 = val
+            ind_u = i
+        end
+    end
+    return ind_u
+end

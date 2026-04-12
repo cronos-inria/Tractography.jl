@@ -196,22 +196,12 @@ KA.@kernel inbounds=true function _sample_kernel!(
     conditioned_proba = proba_max = zero(𝒯)
 
     voxel_index₁ = voxel_index₂ = voxel_index₃ = Int32(0)
+    precomputed_odf::Bool = true
 
-    if maxfod_start
-        voxel_index₁, voxel_index₂, voxel_index₃ = get_voxel_index(tf, (x₁, x₂, x₃))
-        ind_u = _device_argmax(fodf, voxel_index₁, voxel_index₂, voxel_index₃, n_angles)
-        u₁ = directions[ind_u, 1]; u₂ = directions[ind_u, 2]; u₃ = directions[ind_u, 3]
-    end
-
-    if reverse_direction
-        u₁ = -u₁
-        u₂ = -u₂
-        u₃ = -u₃
-    end
-
-    if reverse_direction || ~maxfod_start
-        ind_u = _device_get_angle(directions, u₁, u₂, u₃, n_angles)
-    end
+    (;ind_u, u₁, u₂, u₃, voxel_index₁, voxel_index₂, voxel_index₃) = _init_streamline(
+                                    maxfod_start, reverse_direction, precomputed_odf,
+                                    tf, fodf, directions, n_angles,
+                                    x₁, x₂, x₃, u₁, u₂, u₃)
 
     streamlines[1, 1, nₙₘ] = x₁
     streamlines[2, 1, nₙₘ] = x₂

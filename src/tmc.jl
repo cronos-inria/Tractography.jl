@@ -79,11 +79,9 @@ $(TYPEDEF)
 
 Tractography sampling of the diffusive model performed with geometric Euler-Maruyama method [1]; its precision is weak order 1. The streamlines (Xₜ)ₜ are solution of the SDE
 
-dXₜ = γ⋅drift(Xₜ)⋅dt + √(2γ ⋅ γ_noise) ⋅ dnoiseₜ
+dXₜ = Uₜ⋅dt
 
-where
-
-drift(Xₜ) = (Xₜ², ∇log f(Xₜ))
+dUₜ = γ⋅∇log f(Uₜ)⋅dt + √(2γ ⋅ γ_noise) ⋅ dnoiseₜ
 
 # Arguments (with default values):
 $(TYPEDFIELDS)

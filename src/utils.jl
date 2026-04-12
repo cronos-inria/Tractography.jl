@@ -67,8 +67,8 @@ end
 
 @inline function get_voxel_index(x_voxel)
     @inbounds voxel_index = (unsafe_trunc(UInt32, round(x_voxel[1], RoundNearest) + 1),
-                        unsafe_trunc(UInt32, round(x_voxel[2], RoundNearest) + 1),
-                        unsafe_trunc(UInt32, round(x_voxel[3], RoundNearest) + 1))
+                             unsafe_trunc(UInt32, round(x_voxel[2], RoundNearest) + 1),
+                             unsafe_trunc(UInt32, round(x_voxel[3], RoundNearest) + 1))
     return voxel_index
 end
 

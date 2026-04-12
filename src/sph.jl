@@ -95,6 +95,7 @@ function get_vector_of_sh(angles::AbstractVector{Tuple{𝒯, 𝒯}}, lmax, der::
     Yₗₘ
 end
 
+# vector with expression for ∂Ylm∂ϕ
 const YLM_DP_RHS = Any[
     :(0f0),
 
@@ -102,55 +103,52 @@ const YLM_DP_RHS = Any[
     :(-1.0925484305920792f0 * stct * cp),
     :(0f0),
     :(1.0925484305920792f0 * stct * sp),
-    :(-0.54627421529f0 * st2 * 2f0 * s2p),
+    :(-0.54627421529f0     * st2 * 2f0 * s2p),
 
-    :(0.62583573544f0 * st4 * 4f0 * c4p),
+    :(0.62583573544f0  * st4 * 4f0 * c4p),
     :(-1.77013076978f0 * st3 * ct * 3f0 * c3p),
-    :(0.47308734787f0 * st2 * (7f0 * ct2 - 1f0) * 2f0 * c2p),
+    :(0.47308734787f0  * st2 * (7f0 * ct2 - 1f0) * 2f0 * c2p),
     :(-0.66904654355f0 * stct * (7f0 * ct2 - 3f0) * cp),
     :(0f0),
-    :(0.66904654355f0 * stct * (7f0 * ct2 - 3f0) * sp),
+    :(0.66904654355f0  * stct * (7f0 * ct2 - 3f0) * sp),
     :(-0.47308734787f0 * st2 * (7f0 * ct2 - 1f0) * 2f0 * s2p),
-    :(1.77013076978f0 * st3 * ct * 3f0 * s3p),
+    :(1.77013076978f0  * st3 * ct * 3f0 * s3p),
     :(-0.62583573544f0 * st4 * 4f0 * s4p),
 
-    :(0.68318410519f0 * st6 * 6f0 * c6p),
+    :(0.68318410519f0  * st6 * 6f0 * c6p),
     :(-2.36661916223f0 * st5 * ct * 5f0 * c5p),
-    :(0.50456490072f0 * st4 * (11f0 * ct2 - 1f0) * 4f0 * c4p),
+    :(0.50456490072f0  * st4 * (11f0 * ct2 - 1f0) * 4f0 * c4p),
     :(-0.92120525951f0 * st3 * (11f0 * ct3 - 3f0 * ct) * 3f0 * c3p),
-    :(0.46060262975f0 * st2 * (33f0 * ct4 - 18f0 * ct2 + 1f0) * 2f0 * c2p),
+    :(0.46060262975f0  * st2 * (33f0 * ct4 - 18f0 * ct2 + 1f0) * 2f0 * c2p),
     :(-0.58262136251f0 * st * (33f0 * ct5 - 30f0 * ct3 + 5f0 * ct) * cp),
     :(0f0),
-    :(0.58262136251f0 * st * (33f0 * ct5 - 30f0 * ct3 + 5f0 * ct) * sp),
+    :(0.58262136251f0  * st * (33f0 * ct5 - 30f0 * ct3 + 5f0 * ct) * sp),
     :(-0.46060262975f0 * st2 * (33f0 * ct4 - 18f0 * ct2 + 1f0) * 2f0 * s2p),
-    :(0.92120525951f0 * st3 * (11f0 * ct3 - 3f0 * ct) * 3f0 * s3p),
+    :(0.92120525951f0  * st3 * (11f0 * ct3 - 3f0 * ct) * 3f0 * s3p),
     :(-0.50456490072f0 * st4 * (11f0 * ct2 - 1f0) * 4f0 * s4p),
-    :(2.36661916223f0 * st5 * ct * 5f0 * s5p),
+    :(2.36661916223f0  * st5 * ct * 5f0 * s5p),
     :(-0.68318410519f0 * st6 * 6f0 * s6p),
 
-    :(0.72892666017f0 * st8 * 8f0 * c8p),
-    :(-2.9157066407f0 * st7 * ct * 7f0 * c7p),
-    :(0.53233276606f0 * st6 * (15f0 * ct2 - 1f0) * 6f0 * c6p),
-    :(-3.4499106221f0 * st5 * (5f0 * ct3 - ct) * 5f0 * c5p),
-    :(0.47841652475f0 * st4 * (65f0 * ct4 - 26f0 * ct2 + 1f0) * 4f0 * c4p),
-    :(-1.2352661553f0 * st3 * (39f0 * ct5 - 26f0 * ct3 + 3f0 * ct) * 3f0 * c3p),
-    :(0.45615225843f0 * st2 * (143f0 * ct6 - 143f0 * ct4 + 33f0 * ct2 - 1f0) * 2f0 * c2p),
+    :(0.72892666017f0  * st8 * 8f0 * c8p),
+    :(-2.9157066407f0  * st7 * ct * 7f0 * c7p),
+    :(0.53233276606f0  * st6 * (15f0 * ct2 - 1f0) * 6f0 * c6p),
+    :(-3.4499106221f0  * st5 * (5f0 * ct3 - ct) * 5f0 * c5p),
+    :(0.47841652475f0  * st4 * (65f0 * ct4 - 26f0 * ct2 + 1f0) * 4f0 * c4p),
+    :(-1.2352661553f0  * st3 * (39f0 * ct5 - 26f0 * ct3 + 3f0 * ct) * 3f0 * c3p),
+    :(0.45615225843f0  * st2 * (143f0 * ct6 - 143f0 * ct4 + 33f0 * ct2 - 1f0) * 2f0 * c2p),
     :(-0.10904124589f0 * st * (715f0 * ct7 - 1001f0 * ct5 + 385f0 * ct3 - 35f0 * ct) * cp),
     :(0f0),
-    :(0.10904124589f0 * st * (715f0 * ct7 - 1001f0 * ct5 + 385f0 * ct3 - 35f0 * ct) * sp),
+    :(0.10904124589f0  * st * (715f0 * ct7 - 1001f0 * ct5 + 385f0 * ct3 - 35f0 * ct) * sp),
     :(-0.45615225843f0 * st2 * (143f0 * ct6 - 143f0 * ct4 + 33f0 * ct2 - 1f0) * 2f0 * s2p),
-    :(1.2352661553f0 * st3 * (39f0 * ct5 - 26f0 * ct3 + 3f0 * ct) * 3f0 * s3p),
+    :(1.2352661553f0   * st3 * (39f0 * ct5 - 26f0 * ct3 + 3f0 * ct) * 3f0 * s3p),
     :(-0.47841652475f0 * st4 * (65f0 * ct4 - 26f0 * ct2 + 1f0) * 4f0 * s4p),
-    :(3.4499106221f0 * st5 * (5f0 * ct3 - ct) * 5f0 * s5p),
+    :(3.4499106221f0   * st5 * (5f0 * ct3 - ct) * 5f0 * s5p),
     :(-0.53233276606f0 * st6 * (15f0 * ct2 - 1f0) * 6f0 * s6p),
-    :(2.9157066407f0 * st7 * ct * 7f0 * s7p),
+    :(2.9157066407f0   * st7 * ct * 7f0 * s7p),
     :(-0.72892666017f0 * st8 * 8f0 * s8p),
 ]
 
-# ------------------------------------------------------------------
-# 2) Transformation symbolique "division par st"
-# ------------------------------------------------------------------
-
+# Symbolic transform for division by st (sin(θ))
 const _DIV_ST_RULES = Dict{Symbol,Any}(
     :st   => :(one(𝒯)),
     :st2  => :st,
@@ -173,10 +171,6 @@ function _divide_by_st(ex)
     end
 end
 
-# ------------------------------------------------------------------
-# 3) Génération du bloc d'accumulation
-# ------------------------------------------------------------------
-
 function _make_ylm_dp_block(acc::Symbol; divide_by_st::Bool)
     rhs_list = divide_by_st ? map(_divide_by_st, YLM_DP_RHS) : YLM_DP_RHS
 
@@ -190,12 +184,8 @@ function _make_ylm_dp_block(acc::Symbol; divide_by_st::Bool)
     return Expr(:block, stmts...)
 end
 
-# ------------------------------------------------------------------
-# 4) Génération de deux méthodes spécialisées
-# ------------------------------------------------------------------
-
 for DIV in (false, true)
-    body = _make_ylm_dp_block(:ylm_dp; divide_by_st=DIV)
+    body = _make_ylm_dp_block(:ylm_dp; divide_by_st = DIV)
 
     @eval @inline function _accum_ylm_dp(::Val{$DIV},
                                          V::AbstractVector{𝒯},
@@ -308,7 +298,7 @@ function _ishtmtx_dot_impl(::Val{DIV},
         # what is the normalization?
 
         # --- Ylm values (indices +1 vs C) ---
-        n = 1
+        n::UInt32 = 1
         ylm += (𝒯(1/sqrt(4pi))) * V[n]; n += 1
 
         # Real spherical harmonics

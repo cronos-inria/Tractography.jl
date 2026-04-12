@@ -6,7 +6,7 @@ Exponential map on the sphere. Assumes t > 0.
 
 See https://github.com/JuliaManifolds/ManifoldsBase.jl/blob/5c4a61ed3e5e44755a22f7872cb296a621905f87/test/ManifoldsBaseTestUtils.jl#L63
 """
-function Exp𝕊²(p, X, t)
+@inline function Exp𝕊²(p, X, t)
     n = norm(X)
     if iszero(n)
         return p
@@ -96,7 +96,8 @@ function init(model::TMC{𝒯},
     _is_on_cpu = cache_cpu.odf isa 𝒯ₐ
     ∫odf = sum(cache_cpu.odf, dims = 1)[1, :, :, :]
     # here, we have to be careful because the mollifier attributes non zero probabilities
-    map!(x -> x > 0 ? x : zero(x), ∫odf, @views model.foddata.data.raw[:,:,:,1])
+    foddata_raw = _get_array(model.foddata.data)
+    map!(x -> x > 0 ? x : zero(x), ∫odf, @views foddata_raw[:,:,:,1])
 
     ThreadedCache(
             _is_on_cpu ? cache_cpu.odf   : 𝒯ₐ(cache_cpu.odf),
@@ -142,10 +143,11 @@ function sample!(streamlines,
     backend = KA.get_backend(seeds)
     nth = backend isa KA.GPU ? gputhreads : nthreads
     kernel! = _sample_kernel_diffusion!(backend, nth)
+    _alg = _get_alg(alg)
     @time "kernel-diffusion" kernel!(
                             streamlines,
                             streamlines_length,
-                            _get_alg(alg),
+                            _alg,
                             seeds,
                             cache.odf,
                             cache.∂θodf,
@@ -153,7 +155,7 @@ function sample!(streamlines,
                             cache.∫odf,
                             cache.directions,
                             model.foddata.transform,
-                            Int32(nₜ),
+                            UInt32(nₜ),
                             maxfod_start,
                             reverse_direction,
                             model.proba_min,
@@ -183,12 +185,12 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                             @Const(∫odf::AbstractArray{𝒯, 3}),
                             @Const(directions::AbstractMatrix{𝒯}),
                             @Const(tf),
-                            @Const(nₜ),
-                            @Const(maxfod_start),
-                            @Const(reverse_direction),
+                            @Const(nₜ::UInt32),
+                            @Const(maxfod_start::Bool),
+                            @Const(reverse_direction::Bool),
                             @Const(proba_min::𝒯),
                             @Const(dt::𝒯),
-                            @Const(saveat::Int),
+                            @Const(saveat),
                             @Const(γ::𝒯),
                             @Const(γn::𝒯),
                             @Const(dΩ),
@@ -227,14 +229,13 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     F = ∫F = Fθ = Fϕn = hx = ∂ = zero(𝒯)
     st = ct = sp = cp = zero(𝒯)
     θᵢ, ϕᵢ = euclidean_to_spherical(u₁, u₂, u₃)
-    iₛₐᵥₑ = one(UInt32) + 1
+    iₛₐᵥₑ::UInt32 = UInt32(2)
 
     # Riemannian Langevin algorithm [1]
     # Karthik Bharath, Alexander Lewis, et al. Sampling and Estimation on Manifolds Using the Langevin Diﬀusion. n.d.
     # X_{n+1}^h =\exp_{X_n^h}(  h/2⋅∇ E(X_n^h) + √h ⋅ g^{-1/2}(X_n^h) ⋅ ξ_{n+1})
 
     for iₜ = UInt32(2):nₜ
-        P = SA.SVector(x₁, x₂, x₃)
         D = SA.SVector(u₁, u₂, u₃)
         # x is in native space
         (voxel_index₁, voxel_index₂, voxel_index₃) = get_voxel_index(tf, (x₁, x₂, x₃))
@@ -247,13 +248,13 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
             if precomputed_odf # static, removed at compilation
                 ind_u = _device_get_angle(directions, u₁, u₂, u₃, n_angles)
                 # !! Careful here, we need to have a probability: F / ∫F
-                F  =  fodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
-                Fθ = ∂θodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
+                F   =  fodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
+                Fθ  = ∂θodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
                 Fϕn = ∂ϕodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
-                Fϕn /= st
-                ∫F =  ∫odf[voxel_index₁, voxel_index₂, voxel_index₃]
+                ∫F  =  ∫odf[voxel_index₁, voxel_index₂, voxel_index₃]
                 st, ct = sincos(θᵢ)
                 sp, cp = sincos(ϕᵢ)
+                Fϕn /= st
             else
                 F, Fϕn, Fθ = ishtmtx_dot_divst(ϕᵢ, θᵢ, @view fodf[:, voxel_index₁, voxel_index₂, voxel_index₃])
                 ∂ = ∂softplus(F, 100f0)
@@ -272,28 +273,24 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
             # recall D = (st * cp, st * sp, ct), we have error ~ 1e-7
 
             # local orthonormal basis
-            eθ = SA.SVector(ct * cp, ct * sp, -st)
-            eϕ = SA.SVector(-sp, cp, 0)
+            E₁ = SA.SVector(ct * cp, ct * sp, -st)
+            E₂ = SA.SVector(-sp, cp, 0)
 
             # we call ishtmtx_dot_divst, so no need to divide Fϕn by st
-            drift = Fθ * eθ + Fϕn * eϕ
+            drift = Fθ * E₁ + Fϕn * E₂
 
             # 19-AAP1507
             hx = get_time_step(is_adaptive, dt, drift, F)
 
-
             if alg isa Transport
                 tangent = (γ * hx / F) * drift
             else
-                noise = randn(𝒯) * eθ + randn(𝒯) * eϕ
+                noise = randn(𝒯) * E₁ + randn(𝒯) * E₂
                 tangent = (γ * hx / F) * drift + sqrt(2γ * hx * γn) * noise
             end
 
             # Geometric-Euler scheme
             u₁, u₂, u₃ = Exp𝕊²(D, tangent, one(𝒯)) # injectivity radius
-
-            # u₁, u₂, u₃ = D + tangent
-            # u₁, u₂, u₃ = normalize(SA.SVector(u₁, u₂, u₃))
             θᵢ, ϕᵢ = euclidean_to_spherical(u₁, u₂, u₃)
 
             x₁ += hx * u₁

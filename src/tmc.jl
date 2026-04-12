@@ -77,7 +77,7 @@ struct Deterministic <: DeterministicSampler end
 """
 $(TYPEDEF)
 
-Tractography sampling performed with diffusive model. Basically, the streamlines (Xₜ)ₜ are solution of the SDE
+Tractography sampling of the diffusive model performed with geometric Euler-Maruyama method [1]; its precision is weak order 1. The streamlines (Xₜ)ₜ are solution of the SDE
 
 dXₜ = γ⋅drift(Xₜ)⋅dt + √(2γ ⋅ γ_noise) ⋅ dnoiseₜ
 
@@ -94,6 +94,9 @@ Example for `Float32`: `Diffusion(γ = 1f0)`.
 If you want `Float64`, you have to pass the two scalars
 
     ```Diffusion(γ = 1.0, γ_noise = 1.0)```
+
+# Reference(s)
+[1] Bharath, K., Lewis, A., Sharma, A., & Tretyakov, M. V. (n.d.). Sampling and Estimation on Manifolds using the Langevin Diﬀusion.
 """
 @with_kw_noshow struct Diffusion{T, Tmol, Tdmol} <: AbstractSDESampler{T}
     "γ parameter of the diffusion process. It is related to the curvature of the streamline."
@@ -139,7 +142,7 @@ function Base.show(io::IO, alg::AbstractSDESampler{T}) where {T}
     printstyled(io, "$(typeof(alg).name.name) [$T]" ; bold = true, color = :cyan)
     printstyled(io, " sampling algorithm\n", color = :cyan)
     println(io, "├─ adaptive = ", is_adaptive(alg))
-    if alg isa Diffusion
+    if ~(alg isa Transport)
         println(io, "├─ γ        = ", get_γ(alg))
         println(io, "└─ γ_noise  = ", get_γ_noise(alg))
     else

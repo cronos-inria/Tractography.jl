@@ -295,7 +295,7 @@ KA.@kernel inbounds=true function _sample_kernel!(
             streamlines[2, iₜ, nₙₘ] = x₂
             streamlines[3, iₜ, nₙₘ] = x₃
         end 
-    end
+    end # for-loop
     streamlines_length[nₙₘ] = t_length
 end
 

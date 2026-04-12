@@ -26,7 +26,12 @@ end
 @inline transform(tf::Transform, x::SA.SVector{3}) = transform(tf, SA.SVector(x..., 1)) # for plotting
 @inline transform_inv(tf::Transform, x) = tf.Sinv * x
 
-Transform(S::AbstractArray, T::AbstractVector) = Transform(S, pinv(S), T)
+function Transform(S::AbstractArray, T::AbstractVector)
+    if eltype(S) != eltype(T)
+        @warn("Careful! Not all arrays have the same element type!")
+    end
+    Transform(S, pinv(S), T)
+end
 
 """
 $(TYPEDEF)
@@ -46,7 +51,7 @@ $(TYPEDFIELDS)
 
 In the following, `data` has shape `nx x ny x nz x nt`.
 
-- `FODData(data::AbstractArray{𝒯, 4}, tranform::Transform, normalize_it::Bool; file_name = "None")`.
+- `FODData(data::AbstractArray{𝒯, 4}, transform::Transform, normalize_it::Bool; file_name = "None")`.
 - `FODData(data::AbstractArray{𝒯, 4}, S, T, normalize_it::Bool; file_name = "None")`.
 - `FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool)` uses a trivial transform.
 - `FODData(file_name::String; normalize_it::Bool = true, k...)` the transform is extracted from the nii file.

@@ -198,12 +198,8 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     # index of the streamline being computed
     nₙₘ = @index(Global)
 
-    x₁ = seeds[1, nₙₘ]
-    x₂ = seeds[2, nₙₘ]
-    x₃ = seeds[3, nₙₘ]
-    u₁ = seeds[4, nₙₘ]
-    u₂ = seeds[5, nₙₘ]
-    u₃ = seeds[6, nₙₘ]
+    x₁ = seeds[1, nₙₘ]; x₂ = seeds[2, nₙₘ]; x₃ = seeds[3, nₙₘ]
+    u₁ = seeds[4, nₙₘ]; u₂ = seeds[5, nₙₘ]; u₃ = seeds[6, nₙₘ]
 
     n_angles::UInt32 = size(directions, 1)
 
@@ -211,6 +207,10 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     ind_u::Int32 = 1
     # streamline length
     t_length::UInt32 = 1
+
+    inside_image::Bool = true
+    continue_tracking::Bool = true
+    voxel_index₁ = voxel_index₂ = voxel_index₃ = Int32(0)
 
     if maxfod_start && precomputed_odf
         voxel_index₁, voxel_index₂, voxel_index₃ = get_voxel_index(tf, (x₁, x₂, x₃))
@@ -229,10 +229,6 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     if (reverse_direction || ~maxfod_start) && precomputed_odf
         ind_u = _device_get_angle(directions, u₁, u₂, u₃, n_angles)
     end
-
-    inside_image::Bool = true
-    continue_tracking::Bool = true
-    voxel_index₁ = voxel_index₂ = voxel_index₃ = Int32(0)
 
     streamlines[1, 1, nₙₘ] = x₁
     streamlines[2, 1, nₙₘ] = x₂

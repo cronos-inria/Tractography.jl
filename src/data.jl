@@ -1,4 +1,5 @@
-abstract type fODFBasis end
+abstract type Abstract_fODFBasis end
+abstract type AbstractInterpolation end
 
 """
 The fODF are specified in the Spherical Harmonics basis.
@@ -7,6 +8,8 @@ If `issymmetric == true`, only the even `l` are taken into account to yield symm
 struct SphericalHarmonics{issymmetric} <: Abstract_fODFBasis end
 issymmetric(::SphericalHarmonics{_issymmetric}) where {_issymmetric} = _issymmetric
 
+##########################################################################################
+struct NearestNeighbor <: AbstractInterpolation end
 ##########################################################################################
 """
 $(TYPEDEF)
@@ -66,7 +69,7 @@ In the following, `data` has shape `nx x ny x nz x nt`.
 - `FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool)` uses a trivial transform.
 - `FODData(file_name::String; normalize_it::Bool = true, k...)` the transform is extracted from the nii file.
 """
-struct FODData{𝒯, 𝒯d, 𝒯s, 𝒯t, 𝒯b}
+struct FODData{𝒯, 𝒯d, 𝒯s, 𝒯t, 𝒯b, 𝒯i}
     "filename from which the (fod) data is read."
     filename::String
     "field which contains the FOD data."
@@ -79,6 +82,8 @@ struct FODData{𝒯, 𝒯d, 𝒯s, 𝒯t, 𝒯b}
     normalized::Bool
     "Basis for fODF. For example `SphericalHarmonics()`"
     basis::𝒯b
+    "Interpolation of fODF"
+    interpolation::𝒯i
 end
 
 """
@@ -127,9 +132,10 @@ function FODData(data::AbstractArray{𝒯, 4},
                     transform::Transform{𝒯s, 𝒯t},
                     normalize_it::Bool;
                     file_name = "None",
-                    basis::𝒯b = SphericalHarmonics()) where {𝒯, 𝒯s, 𝒯t, 𝒯b}
+                    basis::𝒯b = SphericalHarmonics(),
+                    interpolation::𝒯i = NearestNeighbor()) where {𝒯, 𝒯s, 𝒯t, 𝒯b, 𝒯i}
     lmax = get_lmax_from_fod_length(size(_get_array(data), 4))
-    FODData{_my_typeof(data), typeof(data), 𝒯s, 𝒯t, 𝒯b}(file_name, data, lmax, transform, normalize_it, basis)
+    FODData{_my_typeof(data), typeof(data), 𝒯s, 𝒯t, 𝒯b, 𝒯i}(file_name, data, lmax, transform, normalize_it, basis, interpolation)
 end
 
 """
@@ -151,8 +157,9 @@ function FODData(data::AbstractArray{𝒯, 4},
                 T::𝒯t, 
                 normalize_it::Bool;
                 file_name = "None",
-                basis = SphericalHarmonics{true}()) where {𝒯, 𝒯s, 𝒯t}
-    FODData(data, Transform(S, T), normalize_it; file_name, basis)
+                basis = SphericalHarmonics{true}(),
+                interpolation = NearestNeighbor()) where {𝒯, 𝒯s, 𝒯t}
+    FODData(data, Transform(S, T), normalize_it; file_name, basis, interpolation)
 end
 
 """
@@ -160,12 +167,13 @@ $(TYPEDSIGNATURES)
 
 Constructor for `FODData` based on Array data and trivial transform.
 """
-FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool; basis = SphericalHarmonics{true}()) where {𝒯} = 
+FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool; basis = SphericalHarmonics{true}(), interpolation = NearestNeighbor()) where {𝒯} = 
     FODData(data, 
             SA.SMatrix{4, 4, 𝒯}(I(4)), 
             SA.SVector{3, 𝒯}(zeros(𝒯, 3)), 
             normalize_it; 
-            basis)
+            basis,
+            interpolation)
 
 @inline transform(ni::FODData, x) = transform(ni.transform, x)
 @inline transform_inv(ni::FODData, x) = transform_inv(ni.transform, x)
@@ -196,7 +204,9 @@ It returns a `FODData` struct.
 """
 function FODData(file_name::String; 
                 normalize_it::Bool = true, 
-                basis = SphericalHarmonics{true}(), k...) 
+                basis = SphericalHarmonics{true}(),
+                interpolation = NearestNeighbor(),
+                k...) 
     data = niread(file_name; k...)
     # we normalize the ODF to have mass one
     if basis isa SphericalHarmonics && 
@@ -210,7 +220,7 @@ function FODData(file_name::String;
     A = NIfTI.getaffine(data.header)
     S = SA.@SMatrix [A[i, j] for i = 1:4, j = 1:4]
     T = SA.@SVector [A[i, end] for i = 1:3]
-    return FODData(data, S, T, normalize_it; file_name, basis)
+    return FODData(data, S, T, normalize_it; file_name, basis, interpolation)
 end
 
 """
@@ -218,7 +228,8 @@ $(TYPEDSIGNATURES)
 
 Normalize the data so that the first coefficient belongs to {0, 1}.
 """
-function _normalize_data!(data)
+function _normalize_data!(data::AbstractArray{T, N}) where {T,N}
+    if N < 4; return; end
     nx,ny,nz, = size(data.raw)
     Threads.@threads for k=1:nz
         for j=1:ny
@@ -237,12 +248,13 @@ $(TYPEDSIGNATURES)
 """
 function Base.show(io::IO, foddata::FODData{T, Tp}; full::Bool = false, prefix = "") where {T, Tp} 
     printstyled(prefix, Tp, "\n", bold = true, color = :cyan)
-    println(prefix * " ├─ File name   = ", foddata.filename)
-    println(prefix * " ├─ Dimensions  = ", size(foddata.data))
-    println(prefix * " ├─ basis       = ", foddata.basis)
-    if 
-        println(prefix * " ├─ lmax (SH)   = ", foddata.lmax)
-        println(prefix * " ├─ normalized  = ", foddata.normalized)
+    println(prefix * " ├─ File name     = ", foddata.filename)
+    println(prefix * " ├─ Dimensions    = ", size(foddata.data))
+    println(prefix * " ├─ basis         = ", get_basis(foddata))
+    println(prefix * " ├─ interpolation = ", foddata.interpolation)
+    if get_basis(foddata) isa SphericalHarmonics
+        println(prefix * " ├─ lmax (SH)     = ", foddata.lmax)
+        println(prefix * " ├─ normalized    = ", foddata.normalized)
     end
     if foddata.data isa NIfTI.NIVolume
         println(prefix * " ├─ Voxel size  = ", foddata.data.header.pixdim[1:4])

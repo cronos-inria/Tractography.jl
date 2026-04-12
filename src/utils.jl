@@ -118,6 +118,7 @@ end
                                 ) where {𝒯}
     voxel_index₁ = voxel_index₂ = voxel_index₃ = Int32(0)
     ind_u = UInt32(1)
+
     if maxfod_start && precomputed_odf
         voxel_index₁, voxel_index₂, voxel_index₃ = get_voxel_index(tf, (x₁, x₂, x₃))
         ind_u = _device_argmax(fodf, voxel_index₁, voxel_index₂, voxel_index₃, n_angles)
@@ -125,13 +126,16 @@ end
         u₂ = directions[ind_u, 2]
         u₃ = directions[ind_u, 3]
     end
+
     if reverse_direction
         u₁ = -u₁
         u₂ = -u₂
         u₃ = -u₃
     end
-    if (reverse_direction || ~maxfod_start) && precomputed_odf
+
+    if precomputed_odf && (reverse_direction || !maxfod_start)
         ind_u = _device_get_angle(directions, u₁, u₂, u₃, n_angles)
     end
-    return (;ind_u, u₁, u₂, u₃, voxel_index₁, voxel_index₂, voxel_index₃)
+
+    return (; ind_u, u₁, u₂, u₃, voxel_index₁, voxel_index₂, voxel_index₃)
 end

@@ -224,7 +224,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     streamlines[3, 1, nₙₘ] = x₃
 
     conditioned_proba = zero(𝒯)
-    F = ∫F = Fθ = Fϕ = hx = ∂ = zero(𝒯)
+    F = ∫F = Fθ = Fϕn = hx = ∂ = zero(𝒯)
     st = ct = sp = cp = zero(𝒯)
     θᵢ, ϕᵢ = euclidean_to_spherical(u₁, u₂, u₃)
     iₛₐᵥₑ = one(UInt32) + 1
@@ -249,16 +249,17 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                 # !! Careful here, we need to have a probability: F / ∫F
                 F  =  fodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
                 Fθ = ∂θodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
-                Fϕ = ∂ϕodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
+                Fϕn = ∂ϕodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
+                Fϕn /= st
                 ∫F =  ∫odf[voxel_index₁, voxel_index₂, voxel_index₃]
                 st, ct = sincos(θᵢ)
                 sp, cp = sincos(ϕᵢ)
             else
-                F, Fϕ, Fθ = ishtmtx_dot(ϕᵢ, θᵢ, @view fodf[:, voxel_index₁, voxel_index₂, voxel_index₃])
+                F, Fϕn, Fθ = ishtmtx_dot_divst(ϕᵢ, θᵢ, @view fodf[:, voxel_index₁, voxel_index₂, voxel_index₃])
                 ∂ = ∂softplus(F, 100f0)
                 F =  softplus(F, 100f0)
                 Fθ *= ∂
-                Fϕ *= ∂
+                Fϕn *= ∂
                 ∫F = fodf[1, voxel_index₁, voxel_index₂, voxel_index₃]
             end
             continue_tracking = ∫F > proba_min # recall ∫F ∈ [0, 1]
@@ -270,11 +271,12 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
             # tangent vectors in polar coordinates
             # recall D = (st * cp, st * sp, ct), we have error ~ 1e-7
 
-            # local basis
-            eθ = SA.SVector(ct * cp, ct * sp, -st )
-            eϕ = SA.SVector(-sp, cp, 0) # remove the sin(θ) from eϕ because we removed it in Fϕ
+            # local orthonormal basis
+            eθ = SA.SVector(ct * cp, ct * sp, -st)
+            eϕ = SA.SVector(-sp, cp, 0)
 
-            drift = Fθ * eθ + (Fϕ / st) * eϕ
+            # we call ishtmtx_dot_divst, so no need to divide Fϕn by st
+            drift = Fθ * eθ + Fϕn * eϕ
 
             # 19-AAP1507
             hx = get_time_step(is_adaptive, dt, drift, F)

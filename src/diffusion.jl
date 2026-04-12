@@ -1,9 +1,8 @@
 """
 $(TYPEDSIGNATURES)
 
-Exponential map on the sphere.
+Exponential map on the sphere. Assumes t > 0.
 
-We assume that t > 0
 
 See https://github.com/JuliaManifolds/ManifoldsBase.jl/blob/5c4a61ed3e5e44755a22f7872cb296a621905f87/test/ManifoldsBaseTestUtils.jl#L63
 """
@@ -16,11 +15,11 @@ function Exp𝕊²(p, X, t)
     return c .* p .+ (s / n) .* X
 end
 ####################################################################################################
-function init(model::TMC{𝒯, DirectSH}, 
-                alg::Union{Talg, Connectivity{ Talg}}; 
+function init(model::TMC{𝒯, DirectSH},
+                alg::Union{Talg, Connectivity{ Talg}};
                 𝒯ₐ = Array{𝒯},
                 n_sphere = 0) where {𝒯, Talg <: AbstractSDESampler}
-    ni =  𝒯.(get_array(model))
+    ni = 𝒯.(get_array(model))
     cache_cpu = TMCCache(; n_sphere, angles = 0, lmax = get_lmax(model), dΩ = zero(𝒯))
     fod = permutedims(ni, (4, 1, 2, 3))
     if is_normalized(model.foddata)
@@ -42,8 +41,8 @@ function init(model::TMC{𝒯, DirectSH},
     )
 end
 
-function _init(model::TMC{𝒯, PreComputeAllFOD}, 
-                alg::AbstractSDESampler; 
+function _init(model::TMC{𝒯, PreComputeAllFOD},
+                alg::AbstractSDESampler;
                 n_sphere = 400) where 𝒯
     # we want to differentiate wrt (θ,ϕ) the expression mollifier(fodf(θ,ϕ))
     # the expression is ∂mollifier(fodf(θ,ϕ)) * ∂fodf(θ,ϕ)
@@ -59,10 +58,10 @@ function _init(model::TMC{𝒯, PreComputeAllFOD},
 
     # compute all FOD
     nx, ny, nz, nt = size(model)
-    ni =  get_array(model)
-    ni_v = 𝒯.(reshape(ni, nx*ny*nz, nt)) # vector version
+    ni = get_array(model)
+    ni_v = 𝒯.(reshape(ni, nx*ny*nz, nt))
     Y_v = cache.Yₗₘ
-    odf_v  = @time_debug "Mat-Vec:" ni_v * Y_v';
+    odf_v = @time_debug "Mat-Vec:" ni_v * Y_v';
     odf = reshape(odf_v, nx, ny, nz, na);
 
     # compute all ∂θODF
@@ -88,7 +87,7 @@ function _init(model::TMC{𝒯, PreComputeAllFOD},
 end
 
 function init(model::TMC{𝒯},
-                alg::Union{Talg, Connectivity{ Talg}}; 
+                alg::Union{Talg, Connectivity{ Talg}};
                 n_sphere = 400,
                 𝒯ₐ = Array{𝒯},
                 ) where {𝒯, Talg <: AbstractSDESampler}
@@ -166,6 +165,8 @@ function sample!(streamlines,
                             nx, ny, nz,
                             Val(model.evaluation_algo isa PreComputeAllFOD),
                             Val(~(alg isa Connectivity)),
+                            Val(is_adaptive(alg))
+                            ;
                             ndrange = Nmc
                             )
     return streamlines
@@ -194,7 +195,8 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                             nx, ny, nz,
                             ::Val{precomputed_odf},
                             ::Val{save_full_streamline},
-                            ) where {𝒯, save_full_streamline, precomputed_odf}
+                            is_adaptive::Val{is_adaptive_type}
+                            ) where {𝒯, save_full_streamline, precomputed_odf, is_adaptive_type}
     # index of the streamline being computed
     nₙₘ = @index(Global)
 
@@ -288,11 +290,8 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
             drift = Fθ * eθ + (Fϕ / st) * eϕ
 
             # 19-AAP1507
-            if is_adaptive(alg)
-                hx = dt * 2 / min(max(1, norm(drift)/F)^2, 10)
-            else
-                hx = dt
-            end
+            hx = get_time_step(is_adaptive, dt, drift, F)
+
 
             if alg isa Transport
                 tangent = (γ * hx / F) * drift
@@ -313,7 +312,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
             x₃ += hx * u₃
         else
             streamlines_length[nₙₘ] = t_length ÷ saveat
-            if ~save_full_streamline
+            if save_full_streamline == false
                 streamlines[1, 2, nₙₘ] = x₁
                 streamlines[2, 2, nₙₘ] = x₂
                 streamlines[3, 2, nₙₘ] = x₃
@@ -330,3 +329,5 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
         end
     end
 end
+@inline get_time_step(alg, dt, drift, F) = dt
+@inline get_time_step(alg::Val{true}, dt, drift, F) = dt * 2 / min(max(1, norm(drift)/F)^2, 10)

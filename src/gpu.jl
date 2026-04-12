@@ -4,15 +4,15 @@ import KernelAbstractions: @kernel, @index
 """
 $(TYPEDSIGNATURES)
 
-Create a cache for computing streamlines in batches. This is interesting for use of memory limited environments (e.g. on GPU).
+Create a cache for computing streamlines in batches. This is useful for memory-limited environments (e.g. GPU).
 
 !!! tip "Tip"
     Use it with `sample!`
 
 # Arguments
 - `alg` sampling algorithm, `Deterministic, Probabilistic, Diffusion`, etc.
-- `n_sphere::Int = 400` number of points to discretize the sphere on which we evaluate the spherical harmonics.
-- `𝒯ₐ = Array{𝒯}` specify the type of the arrays in the cache. If passed a GPU array type like `CuArray` for CUDA, the sampling occurs on the GPU. Leave it for computing on CPU.
+- `n_sphere::Int = 400` number of points to discretize the sphere for spherical harmonics evaluation.
+- `𝒯ₐ = Array{𝒯}` array type for the cache. Pass a GPU array type like `CuArray` to run on GPU; leave as `Array` for CPU.
 """
 function init(model::TMC{𝒯},
                 alg; 
@@ -38,20 +38,20 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Sample the TMC `model` inplace by overwriting `result`. This requires very little memory and can be run indefinitely on the GPU for example.
+Sample the TMC `model` in place by overwriting `streamlines`. Uses minimal memory and can run indefinitely on GPU.
 
 # Arguments
-- `streamlines` array with shape `3 x nt x Nmc`. `nt` is maximal length of each streamline. `Nmc` is the number of Monte-Carlo simulations to be performed.
-- `streamlines_length` length of the streamlines
-- `model::TMC` 
-- `alg` sampling algorithm, `Deterministic, Probabilistic, Diffusion, etc`.
-- `seeds` matrix of size `6 x Nmc` where `Nmc` is the number of Monte-Carlo simulations to be performed.
+- `streamlines` array with shape `3 x nt x Nmc`. `nt` is the maximum length per streamline. `Nmc` is the number of Monte-Carlo simulations.
+- `streamlines_length` lengths of the streamlines.
+- `model::TMC` model to sample from.
+- `alg` sampling algorithm: `Deterministic`, `Probabilistic`, `Diffusion`, etc.
+- `seeds` matrix of size `6 x Nmc` with positions (x,y,z) and directions (u,v,w).
 
 ## Optional arguments
-- `maxfod_start::Bool` for each locations, use direction provided by the argmax of the ODF.
-- `reverse_direction::Bool` reverse initial direction.
-- `nthreads::Int = 8` number of threads on CPU.
-- `gputhreads::Int = 512` number of threads on GPU.
+- `maxfod_start::Bool` use the argmax direction of the ODF at each location.
+- `reverse_direction::Bool` reverse the initial direction.
+- `nthreads::Int = 8` number of CPU threads.
+- `gputhreads::Int = 512` number of GPU threads.
 """
 function sample!(streamlines, 
                   streamlines_length,
@@ -297,6 +297,7 @@ KA.@kernel inbounds=true function _sample_kernel!(
         end 
     end # for-loop
     streamlines_length[nₙₘ] = t_length
+    return nothing
 end
 
 @inline function in_image(voxel_index₁::Integer, voxel_index₂::Integer, voxel_index₃::Integer, nx, ny, nz)

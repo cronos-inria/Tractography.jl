@@ -103,7 +103,7 @@ $(TYPEDSIGNATURES)
 Constructor for `FODData` based on Array data and transform.
 
 ## Arguments
-- `data::AbstractArray{𝒯, 4}`
+- `data::AbstractArray{𝒯, 4}`.
 - `transform::Transform` affine mapping for the coordinate transform.
 - `normalize_it (= true)` the raw spherical harmonics are scaled so that the zero spherical harmonic coefficient is one (or zero).
 
@@ -121,7 +121,7 @@ $(TYPEDSIGNATURES)
 Constructor for `FODData` based on Array data and transform.
 
 ## Arguments
-- `data::AbstractArray{𝒯, 4}`
+- `data::AbstractArray{𝒯, 4}`.
 - `S` linear mapping for the coordinate transform. It will be passed to `Transform(S, T)`.
 - `T` translation for the coordinate transform. It will be passed to `Transform(S, T)`.
 - `normalize_it (= true)` the raw spherical harmonics are scaled so that the zero spherical harmonic coefficient is one (or zero).
@@ -129,7 +129,11 @@ Constructor for `FODData` based on Array data and transform.
 ## Keyword arguments
 - `file_name (= "None")` path to data.
 """
-function FODData(data::AbstractArray{𝒯, 4}, S::𝒯s, T::𝒯t, normalize_it::Bool; file_name = "None") where {𝒯, 𝒯s, 𝒯t}
+function FODData(data::AbstractArray{𝒯, 4}, 
+                S::𝒯s, 
+                T::𝒯t, 
+                normalize_it::Bool;
+                file_name = "None") where {𝒯, 𝒯s, 𝒯t}
     FODData(data, Transform(S, T), normalize_it; file_name)
 end
 

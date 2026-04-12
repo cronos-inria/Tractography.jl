@@ -8,6 +8,14 @@ If `issymmetric == true`, only the even `l` are taken into account to yield symm
 struct SphericalHarmonics{issymmetric} <: Abstract_fODFBasis end
 issymmetric(::SphericalHarmonics{_issymmetric}) where {_issymmetric} = _issymmetric
 
+"""
+The fODF are specified in the Diffusion Tensor Imaging basis. They are therefore expressed as
+
+f(u) = < u, D⋅u > 
+
+where D is a real symmetric positive definite 3 x 3 matrix.
+"""
+struct DTI <: Abstract_fODFBasis end
 ##########################################################################################
 struct NearestNeighbor <: AbstractInterpolation end
 ##########################################################################################

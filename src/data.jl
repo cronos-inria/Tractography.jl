@@ -1,3 +1,10 @@
+abstract type fODFBasis end
+
+"""
+The fODF are specified in the Spherical Harmonics basis.
+"""
+struct SphericalHarmonics <: fODFBasis end
+
 """
 $(TYPEDEF)
 
@@ -56,7 +63,7 @@ In the following, `data` has shape `nx x ny x nz x nt`.
 - `FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool)` uses a trivial transform.
 - `FODData(file_name::String; normalize_it::Bool = true, k...)` the transform is extracted from the nii file.
 """
-struct FODData{𝒯, 𝒯d, 𝒯s, 𝒯t}
+struct FODData{𝒯, 𝒯d, 𝒯s, 𝒯t, 𝒯b}
     "filename from which the (fod) data is read."
     filename::String
     "field which contains the FOD data."
@@ -67,6 +74,8 @@ struct FODData{𝒯, 𝒯d, 𝒯s, 𝒯t}
     transform::Transform{𝒯s, 𝒯t}
     "Are the data normalized? In this case `fod[i,j,l,1] ∈ {0,1}`."
     normalized::Bool
+    "Basis for fODF. For example `SphericalHarmonics()`"
+    basis::𝒯b
 end
 
 """
@@ -82,6 +91,7 @@ _get_array(x::FODData) = _get_array(x.data)
 _my_typeof(x) = typeof(x)
 _my_typeof(x::NIfTI.NIVolume) = typeof(x.raw)
 is_normalized(foddata) = foddata.normalized
+get_basis(foddata) = foddata.basis
 
 """
 $(TYPEDSIGNATURES)
@@ -110,9 +120,13 @@ Constructor for `FODData` based on Array data and transform.
 ## Keyword arguments
 - `file_name (= "None")` path to data.
 """
-function FODData(data::AbstractArray{𝒯, 4}, tranform::Transform{𝒯s, 𝒯t}, normalize_it::Bool; file_name = "None") where {𝒯, 𝒯s, 𝒯t}
+function FODData(data::AbstractArray{𝒯, 4}, 
+                    transform::Transform{𝒯s, 𝒯t},
+                    normalize_it::Bool;
+                    file_name = "None",
+                    basis::𝒯b = SphericalHarmonics()) where {𝒯, 𝒯s, 𝒯t, 𝒯b}
     lmax = get_lmax_from_fod_length(size(_get_array(data), 4))
-    FODData{_my_typeof(data), typeof(data), 𝒯s, 𝒯t}(file_name, data, lmax, tranform, normalize_it)
+    FODData{_my_typeof(data), typeof(data), 𝒯s, 𝒯t, 𝒯b}(file_name, data, lmax, transform, normalize_it, basis)
 end
 
 """
@@ -133,8 +147,9 @@ function FODData(data::AbstractArray{𝒯, 4},
                 S::𝒯s, 
                 T::𝒯t, 
                 normalize_it::Bool;
-                file_name = "None") where {𝒯, 𝒯s, 𝒯t}
-    FODData(data, Transform(S, T), normalize_it; file_name)
+                file_name = "None",
+                basis = SphericalHarmonics()) where {𝒯, 𝒯s, 𝒯t}
+    FODData(data, Transform(S, T), normalize_it; file_name, basis)
 end
 
 """
@@ -142,7 +157,12 @@ $(TYPEDSIGNATURES)
 
 Constructor for `FODData` based on Array data and trivial transform.
 """
-FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool) where {𝒯} = FODData(data, SA.SMatrix{4, 4, 𝒯}(I(4)), SA.SVector{3, 𝒯}(zeros(𝒯, 3)), normalize_it)
+FODData(data::AbstractArray{𝒯, 4}, normalize_it::Bool; basis = SphericalHarmonics()) where {𝒯} = 
+    FODData(data, 
+            SA.SMatrix{4, 4, 𝒯}(I(4)), 
+            SA.SVector{3, 𝒯}(zeros(𝒯, 3)), 
+            normalize_it; 
+            basis)
 
 @inline transform(ni::FODData, x) = transform(ni.transform, x)
 @inline transform_inv(ni::FODData, x) = transform_inv(ni.transform, x)
@@ -164,13 +184,14 @@ show(stdout, ni; full = true)
 
 ## Keyword arguments
 - `normalize_it (= true)` the raw spherical harmonics are scaled so that the zero spherical harmonic coefficient is one (or zero).
+- `basis [= SphericalHarmonics()]`
 - the additional keyword arguments are passed to `NIfTI.niread`.
 
 ## Output
 
 It returns a `FODData` struct.
 """
-function FODData(file_name::String; normalize_it::Bool = true, k...) 
+function FODData(file_name::String; normalize_it::Bool = true, basis = SphericalHarmonics(), k...) 
     data = niread(file_name; k...)
     # we normalize the ODF to have mass one
     if ~all(x-> x >= 0, data.raw[:,:,:,1]) 
@@ -214,6 +235,7 @@ function Base.show(io::IO, foddata::FODData{T, Tp}; full::Bool = false, prefix =
     println(prefix * " ├─ lmax (SH)   = ", foddata.lmax)
     println(prefix * " ├─ Dimensions  = ", size(foddata.data))
     println(prefix * " ├─ normalized  = ", foddata.normalized)
+    println(prefix * " ├─ basis       = ", foddata.basis)
     if foddata.data isa NIfTI.NIVolume
         println(prefix * " ├─ Voxel size  = ", foddata.data.header.pixdim[1:4])
         println(prefix * " ├─ Orientation = ", NIfTI.orientation(foddata.data))

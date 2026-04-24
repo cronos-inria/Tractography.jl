@@ -2,13 +2,23 @@
 
 A complete streamline generation workflow typically involves the following steps:
 
-1. **Estimating fibre orientation distributions (FODs)**  
-2. **Generating seeds** from the estimated FODs  
-3. **Running tractography algorithms** to produce streamlines  
+1. **Estimating FODs**
+2. **Choosing a model for the streamlines**  
+3. **Choosing a model for estimating fibre orientation distributions (FODs)**
+4. **Generating seeds** from the FODs  
+5. **Running tractography algorithms** to produce streamlines  
 
-The `Tractography.jl` package focuses on steps **2** and **3**.  
+The `Tractography.jl` package focuses on steps **>1**.  
 Step **1** — estimating FODs — should be performed using a dedicated library, such as [Fibers.jl](https://github.com/lincbrain/Fibers.jl).
 
+---
+
+## Model of streamlines specification
+
+The model can either be
+- Tractography Markov Chain (TMC)
+- Diffusion
+- Transport
 
 ---
 

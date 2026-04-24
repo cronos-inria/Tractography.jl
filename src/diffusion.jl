@@ -3,7 +3,6 @@ $(TYPEDSIGNATURES)
 
 Exponential map on the sphere. Assumes t > 0.
 
-
 See https://github.com/JuliaManifolds/ManifoldsBase.jl/blob/5c4a61ed3e5e44755a22f7872cb296a621905f87/test/ManifoldsBaseTestUtils.jl#L63
 """
 @inline function Exp𝕊²(p, X, t)

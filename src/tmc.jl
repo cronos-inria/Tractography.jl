@@ -1,6 +1,6 @@
 abstract type AbstractCache end
 # evaluation of spherical harmonics
-abstract type AbstractSPHEvaluation end
+abstract type AbstractFODEvaluation end
 
 """
 $(TYPEDEF)
@@ -9,14 +9,14 @@ The evaluation of the basis (for example spherical harmonics) is done on the fly
 
 See also `PreComputeAllFOD`
 """
-struct DirectSH <: AbstractSPHEvaluation end
+struct DirectFOD <: AbstractFODEvaluation end
 
 """
 $(TYPEDEF)
 
 Set up for plotting ODF.
 """
-struct PlottingSH <: AbstractSPHEvaluation end
+struct PlottingFOD <: AbstractFODEvaluation end
 
 """
 $(TYPEDEF)
@@ -29,7 +29,7 @@ Evaluation of the basis based on Fibonacci sampling. All ODF are pre-computed on
 ## Details
 If you have `na` angles for sampling the unit sphere and the data is of size `(nx, ny, nz, nsph)`, it yields a matrix of dimensions `(nx, ny, nz, na)`.
 """
-struct PreComputeAllFOD <: AbstractSPHEvaluation end
+struct PreComputeAllFOD <: AbstractFODEvaluation end
 ####################################################################################################
 # streamlines tracking algorithms
 abstract type AbstractSampler end
@@ -195,10 +195,10 @@ $(TYPEDFIELDS)
 - `TMC(Δt = 0.1, proba_min = 0.)` for a Float64 TMC. You need to specify both fields `Δt` and `proba_min`
 - `TMC(odfdata = rand(10,10,10,45))` for custom ODF
 """
-@with_kw_noshow struct TMC{𝒯, 𝒯alg <: AbstractSPHEvaluation, 𝒯d, 𝒯C, 𝒯mol}
+@with_kw_noshow struct TMC{𝒯, 𝒯alg <: AbstractFODEvaluation, 𝒯d, 𝒯C, 𝒯mol}
     "Step size of the TMC."
     Δt::𝒯 = 0.1f0
-    "Spherical harmonics evaluation algorithm. Can be `FibonacciSH(), PreComputeAllFOD()`."
+    "Spherical harmonics evaluation algorithm. Can be `PreComputeAllFOD()`, `DirectFOD()`."
     evaluation_algo::𝒯alg = PreComputeAllFOD()
     "ODF data, typically from nifti file but can be passed as an Array. Must be the list of ODF in the base of spherical harmonics. Hence, it should be an (abstract) 4d array."
     foddata::𝒯d = nothing

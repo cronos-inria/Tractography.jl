@@ -9,7 +9,7 @@ module Tractography
     using Random
 
     # sampling method of FODF
-    export DirectSH, PreComputeAllFOD
+    export DirectFOD, PreComputeAllFOD
     export FODData, TMC, Cone, sample, init
     export Probabilistic, Deterministic, Diffusion, Connectivity
     export save_streamlines

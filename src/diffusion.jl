@@ -15,7 +15,7 @@ See https://github.com/JuliaManifolds/ManifoldsBase.jl/blob/5c4a61ed3e5e44755a22
     return c .* p .+ (s / n) .* X
 end
 ####################################################################################################
-function init(model::TMC{𝒯, DirectSH},
+function init(model::TMC{𝒯, DirectFOD},
                 alg::Union{Talg, Connectivity{ Talg}};
                 𝒯ₐ = Array{𝒯},
                 n_sphere = 0) where {𝒯, Talg <: AbstractSDESampler}

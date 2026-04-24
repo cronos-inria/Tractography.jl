@@ -22,7 +22,7 @@ Tractography.from_mask
 ## [fODF evaluation strategy](@id sheval)
 
 ```@docs
-Tractography.PlottingSH
+Tractography.PlottingFOD
 ```
 
 ```@docs
@@ -30,7 +30,7 @@ Tractography.PreComputeAllFOD
 ```
 
 ```@docs
-Tractography.DirectSH
+Tractography.DirectFOD
 ```
 
 ## Models

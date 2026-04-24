@@ -1,8 +1,8 @@
 using Test, Tractography, LinearAlgebra, Accessors
 
-Tractography.PlottingSH()
+Tractography.PlottingFOD()
 Tractography.PreComputeAllFOD()
-Tractography.DirectSH()
+Tractography.DirectFOD()
 
 Tractography.softplus(0, 1)
 Tractography.∂softplus(0, 1)
@@ -36,7 +36,7 @@ Tractography.sample(model, Tractography.Connectivity(Tractography.Deterministic(
 Tractography.sample(model, Tractography.Probabilistic(), rand(Float32, 6, 2); nt = 10);
 Tractography.sample(model, Tractography.Connectivity(Tractography.Probabilistic()), rand(Float32, 6, 2); nt = 10);
 
-for eval_alg in (Tractography.DirectSH(), Tractography.PreComputeAllFOD())
+for eval_alg in (Tractography.DirectFOD(), Tractography.PreComputeAllFOD())
     model_diffusion = Tractography.TMC(Δt = 0.001f0,
                 foddata = Tractography.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
                 proba_min = 0.0f0,
@@ -69,5 +69,5 @@ show(stdout, cache)
 cache = Tractography.init(model, Tractography.Diffusion())
 show(stdout, cache)
 
-Tractography._init((@set model.evaluation_algo = Tractography.PlottingSH()), Tractography.Deterministic())
+Tractography._init((@set model.evaluation_algo = Tractography.PlottingFOD()), Tractography.Deterministic())
 

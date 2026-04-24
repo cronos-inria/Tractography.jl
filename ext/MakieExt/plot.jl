@@ -126,7 +126,7 @@ function plot_fod!(ax, model::TMC{𝒯} ;
     ni = getdata(model)
     nx, ny, nz, nt = size(ni)
     odf = zeros(Float32, nt)
-    cache = _init((@set model.evaluation_algo = Tractography.PlottingSH()), Probabilistic(); n_sphere)
+    cache = _init((@set model.evaluation_algo = Tractography.PlottingFOD()), Probabilistic(); n_sphere)
     Yₗₘ = Float32.(cache.Yₗₘ)
     F = zeros(Float32, length(cache.angles))
     radius = Float32(radius)

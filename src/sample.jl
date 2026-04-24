@@ -9,7 +9,7 @@ function _init_fibonacci_sh(model::TMC{𝒯}, n_sphere) where {𝒯}
 end
 
 # for plotting
-function _init(model::TMC{𝒯, PlottingSH},
+function _init(model::TMC{𝒯, PlottingFOD},
                 alg::AbstractNotPureRejectionSampler; 
                 n_sphere = 400) where {𝒯}
     _init_fibonacci_sh(model, n_sphere)

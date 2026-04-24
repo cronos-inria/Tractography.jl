@@ -18,7 +18,7 @@ module Tractography
     export plot_streamlines!, plot_fod, plot_fod!
 
     include("plot.jl")
-    include("tmc.jl")
+    include("models.jl")
     include("seeds.jl")
     include("data.jl")
     include("utils.jl")

@@ -184,7 +184,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                             @Const(∂ϕodf::AbstractArray{𝒯, 4}),
                             @Const(∫odf::AbstractArray{𝒯, 3}),
                             @Const(directions::AbstractMatrix{𝒯}),
-                            @Const(tf),
+                            @Const(transform),
                             @Const(nₜ::UInt32),
                             @Const(maxfod_start::Bool),
                             @Const(reverse_direction::Bool),
@@ -218,7 +218,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
 
     (;ind_u, u₁, u₂, u₃, voxel_index₁, voxel_index₂, voxel_index₃) = _init_streamline(
                                     maxfod_start, reverse_direction, precomputed_odf,
-                                    tf, fodf, directions, n_angles,
+                                    transform, fodf, directions, n_angles,
                                     x₁, x₂, x₃, u₁, u₂, u₃)
 
     streamlines[1, 1, nₙₘ] = x₁
@@ -238,7 +238,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     for iₜ = UInt32(2):nₜ
         D = SA.SVector(u₁, u₂, u₃)
         # x is in native space
-        (voxel_index₁, voxel_index₂, voxel_index₃) = get_voxel_index(tf, (x₁, x₂, x₃))
+        (voxel_index₁, voxel_index₂, voxel_index₃) = get_voxel_index(transform, (x₁, x₂, x₃))
 
         inside_image = in_image(voxel_index₁, voxel_index₂, voxel_index₃, nx, ny, nz)
         continue_tracking = inside_image && continue_tracking

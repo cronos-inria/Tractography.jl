@@ -24,7 +24,7 @@ Pkg.add("Tractography")
 
 ## 📚 Citing this work
 
-To come...
+Citation instructions will be added soon.
 
 ## 🧑‍💻 Related Software
 
@@ -55,7 +55,7 @@ Several excellent tractography software packages are available and listed on the
 
 The examples in this documentation prioritize **clarity and simplicity** over maximum performance. However, `Tractography.jl` is capable of extreme-scale tractography.
 
-### Proven at Scale
+### Proven At Scale
 
 This package was used to sample **500 billion streamlines on GPU** for a recent publication:
 

@@ -1,11 +1,12 @@
 # GPU example
 
-Here is an example which works on GPU. The implementation is agnostic to the GPU vendor but we focus on NVIDIA for this example.
+This page shows a GPU workflow for tractography.
+The implementation is backend-agnostic (CUDA, Metal), but the main example below uses CUDA.
 
-To speed up computations, we restrict to `Float32`, this is handled easily by the package.
+To maximize throughput, we use `Float32`.
 
 !!! danger
-    Because allocations matter a lot on GPU, we pre-allocate all the memory required for computations and fill this inplace.
+    GPU allocations are expensive. Pre-allocate arrays once and reuse them in-place.
 
 ```@example GPU
 using Tractography
@@ -49,10 +50,9 @@ tract_length = CuArray(zeros(UInt32, Nmc))
     tract_length = MtlArray(zeros(UInt32, Nmc))
     ```
 
-    The rest of the code should go through without much modifications by essentially changing the array type.
+    The rest of the workflow is unchanged.
 
 
-we next define a buffer to hold the streamlines
 
 ```julia
 streamlines_gpu = cu(zeros(Float32, 3, Nt, Nmc), unified = true)
@@ -60,7 +60,7 @@ streamlines_gpu = cu(zeros(Float32, 3, Nt, Nmc), unified = true)
 
 # Define the computation cache
 
-Because we can compute the streamlines in batches for the same TMC, it is best to cache some data for this
+Because we often run multiple batches on the same `model`, precomputing the cache is recommended.
 
 ```julia
 # we precompute the cache which is heavy otherwise each call to sample
@@ -93,7 +93,7 @@ CUDA.@time TG.sample!(
     This can be called many times, for example after updating the seeds.
 
 
-So far the streamlines `streamlines_gpu` are on the GPU. We can retrieve them at zero cost on the CPU
+`streamlines_gpu` stays on device memory. To inspect the result on CPU, copy or wrap depending on your backend.
 
 ```julia
 streamlines = @time unsafe_wrap(Array, streamlines_gpu);

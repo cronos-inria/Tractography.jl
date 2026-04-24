@@ -39,6 +39,7 @@ abstract type AbstractNotPureRejectionSampler <: AbstractSampler end
 abstract type DeterministicSampler <: AbstractNotPureRejectionSampler end
 # sampling based on SDE
 abstract type AbstractSDESampler{T} <: AbstractSampler end
+abstract type AbstractSDESamplerOrder2{T} <: AbstractSDESampler{T} end
 
 """
 $(TYPEDEF)
@@ -146,6 +147,41 @@ function Base.show(io::IO, alg::AbstractSDESampler{T}) where {T}
     else
         println(io, "└─ γ        = ", get_γ(alg))
     end
+end
+
+"""
+$(TYPEDEF)
+
+Tractography sampling of the diffusive model performed with Frozen-Flow method method SFF2 [1]; its precision is weak order 2. The streamlines (Xₜ)ₜ are solution of the SDE
+
+dXₜ = Uₜ⋅dt
+
+dUₜ = γ⋅∇log f(Uₜ)⋅dt + √(2γ ⋅ γ_noise) ⋅ dnoiseₜ
+
+# Arguments (with default values):
+$(TYPEDFIELDS)
+
+# Constructor
+
+Example for `Float32`: `SFF2(γ = 1f0)`.
+If you want `Float64`, you have to pass the two scalars
+
+    ```SFF2(γ = 1.0, γ_noise = 1.0)```
+
+# Reference(s)
+[1] Bronasco, E., Laurent, A. B., & Huguet, B. (n.d.). High order integration of stochastic dynamics on Riemannian manifolds with frozen flow methods.
+"""
+@with_kw_noshow struct SFF2{T, Tmol, Tdmol} <: AbstractSDESamplerOrder2{T}
+    "γ parameter of the diffusion process. It is related to the curvature of the streamline."
+    γ::T = 1f0
+    "parameter of the diffusion process to scale the variance."
+    γ_noise::T = 1f0
+    "mollifier."
+    mollifier::Tmol = Base.Fix2(softplus, 10)
+    "differential of mollifier."
+    d_mollifier::Tdmol = Base.Fix2(∂softplus, 10)
+    "Fixed time step?"
+    adaptive::Bool = false
 end
 ####################################################################################################
 """

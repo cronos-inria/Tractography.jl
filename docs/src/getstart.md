@@ -8,7 +8,7 @@ This tutorial will introduce you to the functionalities for computing streamline
 
 # Basic use
 
-In this example, we will sample `Nmc` streamlines from a Tractography Markov Chain (TMC).
+In this example, we sample `Nmc` streamlines from a `TMC` model.
 
 ```@example GS
 using Tractography
@@ -36,12 +36,17 @@ model = TMC(Δt = 0.125f0,
 
 ## Step 2: Define the seeds
 
+`seeds` is a `6 x Nmc` matrix. Each column stores:
+
+- `seeds[1:3, i]`: initial position `(x, y, z)` in native space
+- `seeds[4:6, i]`: initial direction `(u1, u2, u3)`
+
 ```@example GS
 Nmc = 10 # Monte Carlo sample
 seeds = rand(Float32, 6, Nmc)
 ```
 
-## Step 3: Chose a sample algorithm
+## Step 3: Choose a sampling algorithm
 
 ```@example GS
 alg = Probabilistic()
@@ -54,7 +59,7 @@ streamlines, tract_length = sample(model, alg, seeds);
 
 # Optimal use
 
-It is often better to cache some data when computing batches of streamlines. This would be done as follows
+When computing multiple batches for the same model, it is more efficient to precompute a cache once and reuse it.
 
 ```@example GS
 model = TMC(Δt = 0.125f0,

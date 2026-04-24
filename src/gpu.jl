@@ -139,7 +139,6 @@ function launch_kernel(nthreads = 8;
                             _get_alg(alg),
                             seeds,
                             odf,
-                            angles,
                             directions,
                             cone,
                             transform,
@@ -164,10 +163,9 @@ KA.@kernel inbounds=true function _sample_kernel!(
                             @Const(alg::Union{Probabilistic, Deterministic}),
                             @Const(seeds::AbstractMatrix{𝒯}),
                             @Const(fodf::AbstractArray{𝒯, 4}),
-                            @Const(angles::AbstractArray{𝒯, 2}),
                             @Const(directions::AbstractMatrix{𝒯}),
                             @Const(cone::AbstractMatrix{𝒯}),
-                            @Const(tf),
+                            @Const(transform),
                             @Const(nₜ::Int32),
                             @Const(maxfod_start::Bool),
                             @Const(reverse_direction::Bool),
@@ -202,14 +200,14 @@ KA.@kernel inbounds=true function _sample_kernel!(
 
     (;ind_u, u₁, u₂, u₃, voxel_index₁, voxel_index₂, voxel_index₃) = _init_streamline(
                                     maxfod_start, reverse_direction, precomputed_odf,
-                                    tf, fodf, directions, n_angles,
+                                    transform, fodf, directions, n_angles,
                                     x₁, x₂, x₃, u₁, u₂, u₃)
 
     streamlines[1, 1, nₙₘ] = x₁; streamlines[2, 1, nₙₘ] = x₂; streamlines[3, 1, nₙₘ] = x₃
 
     for iₜ = 2:nₜ
         # x is in native space
-        (voxel_index₁, voxel_index₂, voxel_index₃) = get_voxel_index(tf, (x₁, x₂, x₃))
+        (voxel_index₁, voxel_index₂, voxel_index₃) = get_voxel_index(transform, (x₁, x₂, x₃))
 
         continue_tracking = continue_tracking && in_image(voxel_index₁, voxel_index₂, voxel_index₃, nx, ny, nz)
         t_length += continue_tracking
@@ -292,7 +290,7 @@ end
                                   ind_u0::UInt32,
                                   n_angles::UInt32) where {𝒯} = ind_max
 
-@inline function next_orientation(alg,
+@inline function next_orientation(::Probabilistic,
                                   ind_u::UInt32,
                                   ind_max::UInt32,
                                   conditioned_proba::𝒯,
@@ -302,8 +300,6 @@ end
                                   ind_u0::UInt32,
                                   n_angles::UInt32) where {𝒯}
     # cumulative sampling distribution (Probabilistic)
-    # only if probabilities large enough
-    # t = _rand[nₙₘ, iₜ] * conditioned_proba
     t = rand(𝒯) * conditioned_proba
     proba0 = zero(𝒯) # it is >= 0 already!
     cw = zero(𝒯)

@@ -11,7 +11,7 @@ To speed up computations, we restrict to `Float32`, this is handled easily by th
 using Tractography
 const TG = Tractography
 
-# define the model for TMC
+# use the TMC as the streamline model
 model = TMC(Δt = 0.125f0,
             foddata = FODData((@__DIR__) * "/../../examples/fod-FC.nii.gz"),
             cone = Cone(45f0),
@@ -31,8 +31,26 @@ Nt = 2000
 seeds = cu(zeros(6, Nmc));
 seeds[1:3, :] .= [-13.75, 26.5, 8] .+ 0.1  .* randn(3, Nmc) .|> Float32 |> CuArray;
 seeds[4, :] .= 1
-tract_length = CuArray((zeros(UInt32, Nmc))
+tract_length = CuArray(zeros(UInt32, Nmc))
 ```
+
+!!! details "GPU on Apple OSX"
+    ```julia
+    using Metal
+    cu = MtlArray{Float32}
+    # number of streamlines
+    Nmc = 1024*400
+    # maximum number of steps for each streamline
+    Nt = 2000
+    # define the seeds
+    seeds = cu(zeros(6, Nmc));
+    seeds[1:3, :] .= [-13.75, 26.5, 8] .+ 0.1  .* randn(3, Nmc) .|> Float32 |> MtlArray;
+    seeds[4, :] .= 1
+    tract_length = MtlArray(zeros(UInt32, Nmc))
+    ```
+
+    The rest of the code should go through without much modifications by essentially changing the array type.
+
 
 we next define a buffer to hold the streamlines
 

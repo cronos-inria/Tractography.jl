@@ -5,7 +5,7 @@ abstract type AbstractSPHEvaluation end
 """
 $(TYPEDEF)
 
-The evaluation of spherical harmonics is done on the fly. Requires little memory.
+The evaluation of the basis (for example spherical harmonics) is done on the fly. Requires little memory.
 
 See also `PreComputeAllFOD`
 """
@@ -21,7 +21,7 @@ struct PlottingSH <: AbstractSPHEvaluation end
 """
 $(TYPEDEF)
 
-Spherical harmonics evaluation based on Fibonacci sampling. All ODF are pre-computed once and saved in a cache. Their positivity is enforced with a `max(0,⋅)` or a mollifier. 
+Evaluation of the basis based on Fibonacci sampling. All ODF are pre-computed once and saved in a cache. Their positivity is enforced with a `max(0,⋅)` or a mollifier. 
 
 !!! danger 
     Requires a relatively large memory!
@@ -59,7 +59,7 @@ _get_alg(alg::Connectivity) = alg.alg
 """
 $(TYPEDEF)
 
-Tractography sampling performed with the cumulative sum distribution. Can be used with `FibonacciSH` and `PreComputeAllFOD`.
+Tractography sampling of the Tractography Markov Chain (TMC) performed with the cumulative sum distribution. Can be used with the basis evalution strategy `PreComputeAllFOD`.
 
 # Constructor
 
@@ -70,7 +70,7 @@ struct Probabilistic <: AbstractNotPureRejectionSampler end
 """
 $(TYPEDEF)
 
-Tractography sampling performed with the argmax function. Can be used with `FibonacciSH` and `PreComputeAllFOD`.
+Tractography sampling of the Tractography Markov Chain (TMC) performed with the argmax function. Can be used with the basis evalution strategy `PreComputeAllFOD`.
 """
 struct Deterministic <: DeterministicSampler end
 
@@ -119,7 +119,7 @@ is_adaptive(alg::Connectivity) = is_adaptive(_get_alg(alg))
 """
 $(TYPEDSIGNATURES)
 
-Define a transport algorithm. Options are the same as for `Diffusion`.
+Define the transport algorithm. Options are the same as for `Diffusion`.
 
 # Arguments (with default values):
 $(TYPEDFIELDS)
@@ -213,6 +213,8 @@ end
 Base.size(model::TMC) = size(getdata(model))
 Base.eltype(model::TMC{𝒯}) where 𝒯 = 𝒯
 @inline get_lmax(model::TMC) = get_lmax(getdata(model))
+@inline get_basis(model::TMC) = get_basis(getdata(model))
+@inline get_evaluation(model::TMC) = model.evaluation_algo
 
 """
 $(TYPEDSIGNATURES)

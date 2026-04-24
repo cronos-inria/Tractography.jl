@@ -71,8 +71,11 @@ function sample!(streamlines,
     if isnothing(cache.cone)
         error("You did not pass a cone function to TMC!")
     end
-        if saveat > 1
+    if saveat > 1
         error("This option is not yet available. Open an issue on the website if you want this feature.")
+    end
+    if !(get_evaluation(model) isa PreComputeAllFOD)
+        error("Only the evaluation strategy PreComputeAllFOD is allowed for `Deterministic` and `Probabilistic`.")
     end
     # the following allows for type inference
     launch_kernel(nthreads;
@@ -192,8 +195,7 @@ KA.@kernel inbounds=true function _sample_kernel!(
     inside_image::Bool = true
     continue_tracking::Bool = true
 
-    total_proba = proba = proba0 = cone_c = zero(𝒯)
-    conditioned_proba = proba_max = zero(𝒯)
+    total_proba = conditioned_proba = zero(𝒯)
 
     voxel_index₁ = voxel_index₂ = voxel_index₃ = Int32(0)
     precomputed_odf::Bool = true
@@ -203,9 +205,7 @@ KA.@kernel inbounds=true function _sample_kernel!(
                                     tf, fodf, directions, n_angles,
                                     x₁, x₂, x₃, u₁, u₂, u₃)
 
-    streamlines[1, 1, nₙₘ] = x₁
-    streamlines[2, 1, nₙₘ] = x₂
-    streamlines[3, 1, nₙₘ] = x₃
+    streamlines[1, 1, nₙₘ] = x₁; streamlines[2, 1, nₙₘ] = x₂; streamlines[3, 1, nₙₘ] = x₃
 
     for iₜ = 2:nₜ
         # x is in native space
@@ -263,27 +263,18 @@ KA.@kernel inbounds=true function _sample_kernel!(
                 # we stop tracking then
                 continue_tracking = false
                 if ~save_full_streamline
-                    streamlines[1, 2, nₙₘ] = x₁
-                    streamlines[2, 2, nₙₘ] = x₂
-                    streamlines[3, 2, nₙₘ] = x₃
+                    streamlines[1, 2, nₙₘ] = x₁; streamlines[2, 2, nₙₘ] = x₂; streamlines[3, 2, nₙₘ] = x₃
                 end
             end
         end
 
         if continue_tracking
-            u₁ = directions[ind_u, 1]
-            u₂ = directions[ind_u, 2]
-            u₃ = directions[ind_u, 3]
-
-            x₁ += Δt * u₁
-            x₂ += Δt * u₂
-            x₃ += Δt * u₃
+            u₁ = directions[ind_u, 1]; u₂ = directions[ind_u, 2]; u₃ = directions[ind_u, 3]
+            x₁ += Δt * u₁; x₂ += Δt * u₂; x₃ += Δt * u₃
         end
 
         if save_full_streamline
-            streamlines[1, iₜ, nₙₘ] = x₁
-            streamlines[2, iₜ, nₙₘ] = x₂
-            streamlines[3, iₜ, nₙₘ] = x₃
+            streamlines[1, iₜ, nₙₘ] = x₁; streamlines[2, iₜ, nₙₘ] = x₂; streamlines[3, iₜ, nₙₘ] = x₃
         end 
     end # for-loop
     streamlines_length[nₙₘ] = t_length

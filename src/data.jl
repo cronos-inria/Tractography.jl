@@ -152,10 +152,10 @@ $(TYPEDSIGNATURES)
 Constructor for `FODData` based on Array data and transform.
 
 ## Arguments
-- `data::AbstractArray{𝒯, 4}`.
+- `data::AbstractArray`. Should be 4d array for spherical harmonics basis.
 - `S` linear mapping for the coordinate transform. It will be passed to `Transform(S, T)`.
 - `T` translation for the coordinate transform. It will be passed to `Transform(S, T)`.
-- `normalize_it (= true)` the raw spherical harmonics are scaled so that the zero spherical harmonic coefficient is one (or zero).
+- `normalize_it (= true)` the raw spherical harmonics are scaled so that the zero spherical harmonics coefficient is one (or zero).
 
 ## Keyword arguments
 - `file_name (= "None")` path to data.

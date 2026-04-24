@@ -8,7 +8,7 @@ model = TMC(Δt = 0.125f0,
             )
 
 alg = Deterministic()
-cache_c = TG._init(model, (Probabilistic()); n_sphere = 200)
+cache_c = TG._init(model, Probabilistic(), TG.get_basis(model); n_sphere = 200)
 
 @test all(isfinite, cache_c.odf)
 

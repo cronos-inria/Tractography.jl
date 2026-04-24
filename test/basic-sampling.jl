@@ -64,10 +64,10 @@ alg = Probabilistic()
 cache = Tractography.init(model, alg)
 Tractography.get_angles(cache, 1)
 show(stdout, cache)
-cache = Tractography._init(model, alg)
+cache = Tractography._init(model, alg, Tractography.get_basis(model))
 show(stdout, cache)
 cache = Tractography.init(model, Tractography.Diffusion())
 show(stdout, cache)
 
-Tractography._init((@set model.evaluation_algo = Tractography.PlottingFOD()), Tractography.Deterministic())
+Tractography._init((@set model.evaluation_algo = Tractography.PlottingFOD()), Tractography.Deterministic(), Tractography.get_basis(model))
 

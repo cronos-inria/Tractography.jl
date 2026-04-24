@@ -29,6 +29,7 @@ makedocs(
                 "fcup.md",
                 "gpu.md",
         ],
+        "fODF specification" => "fodf.md",
         "Algorithms" => "algos.md",
         "Functionalities" => [
                 "plot.md",

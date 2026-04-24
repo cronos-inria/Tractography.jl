@@ -215,50 +215,27 @@ KA.@kernel inbounds=true function _sample_kernel!(
         t_length += continue_tracking
 
         if continue_tracking
-            # we compute the probabilities associated to the odf
-            total_proba = proba = zero(𝒯)
-            conditioned_proba = proba_max = zero(𝒯)
-            ind_max = 0
-            for i in 1:n_angles # use of axes prevents from optimization, better use 1:n
-                proba0 = fodf[i, voxel_index₁, voxel_index₂, voxel_index₃] # it is >= 0 already!
-                cone_c = cone[i, ind_u]
-                proba = proba0 * cone_c
-                # keep track of conditional probabilities
-                conditioned_proba += proba
-                total_proba += proba0
-                # we pre-compute this in case alg isa DeterministicSampler
-                if alg isa DeterministicSampler
-                    if proba > proba_max
-                        proba_max = proba
-                        ind_max = i
-                    end
-                end
-            end
+            conditioned_proba, total_proba, ind_max = 
+                            orientation_probabilities(alg,
+                                                    fodf,
+                                                    cone,
+                                                    voxel_index₁, voxel_index₂, voxel_index₃,
+                                                    ind_u,
+                                                    n_angles)
             # save current index of angle
             ind_u0 = ind_u
 
             if conditioned_proba > proba_min / dΩ &&
                         conditioned_proba > proba_min * total_proba
-                if alg isa DeterministicSampler
-                    ind_u = ind_max
-                else
-                    # cumulative sampling distribution (Probabilistic)
-                    # only if probabilities large enough
-                    # t = _rand[nₙₘ, iₜ] * conditioned_proba
-                    t = rand(𝒯) * conditioned_proba
-                    proba0 = zero(𝒯) # it is >= 0 already! 
-                    cw = zero(𝒯)
-                    for nₐ = 1:n_angles
-                        # compute proba
-                        proba0 = fodf[nₐ, voxel_index₁, voxel_index₂, voxel_index₃]
-                        cone_c = cone[nₐ, ind_u0]
-                        cw += proba0 * cone_c
-                        if cw >= t
-                            ind_u = nₐ
-                            break
-                        end
-                    end
-                end
+                ind_u = next_orientation(alg,
+                                         ind_u,
+                                         ind_max,
+                                         conditioned_proba,
+                                         fodf,
+                                         cone,
+                                         voxel_index₁, voxel_index₂, voxel_index₃,
+                                         ind_u0,
+                                         n_angles)
             else
                 # we stop tracking then
                 continue_tracking = false
@@ -278,4 +255,67 @@ KA.@kernel inbounds=true function _sample_kernel!(
         end 
     end # for-loop
     streamlines_length[nₙₘ] = t_length
+end
+@inline function orientation_probabilities(alg,
+                                          fodf::AbstractArray{𝒯, 4},
+                                          cone::AbstractMatrix{𝒯},
+                                          voxel_index₁, voxel_index₂, voxel_index₃,
+                                          ind_u::UInt32,
+                                          n_angles::UInt32) where {𝒯}
+    total_proba = conditioned_proba = proba_max = zero(𝒯)
+    ind_max = UInt32(0)
+    for i = UInt32(1):n_angles # use of axes prevents from optimization, better use 1:n
+        proba0 = fodf[i, voxel_index₁, voxel_index₂, voxel_index₃] # it is >= 0 already!
+        cone_c = cone[i, ind_u]
+        proba = proba0 * cone_c
+        # keep track of conditional probabilities
+        conditioned_proba += proba
+        total_proba += proba0
+        # we pre-compute this in case alg isa DeterministicSampler
+        if alg isa DeterministicSampler
+            if proba > proba_max
+                proba_max = proba
+                ind_max = i
+            end
+        end
+    end
+    return conditioned_proba, total_proba, ind_max
+end
+
+@inline next_orientation(::DeterministicSampler,
+                                  ind_u::UInt32,
+                                  ind_max::UInt32,
+                                  conditioned_proba::𝒯,
+                                  fodf::AbstractArray{𝒯, 4},
+                                  cone::AbstractMatrix{𝒯},
+                                  voxel_index₁, voxel_index₂, voxel_index₃,
+                                  ind_u0::UInt32,
+                                  n_angles::UInt32) where {𝒯} = ind_max
+
+@inline function next_orientation(alg,
+                                  ind_u::UInt32,
+                                  ind_max::UInt32,
+                                  conditioned_proba::𝒯,
+                                  fodf::AbstractArray{𝒯, 4},
+                                  cone::AbstractMatrix{𝒯},
+                                  voxel_index₁, voxel_index₂, voxel_index₃,
+                                  ind_u0::UInt32,
+                                  n_angles::UInt32) where {𝒯}
+    # cumulative sampling distribution (Probabilistic)
+    # only if probabilities large enough
+    # t = _rand[nₙₘ, iₜ] * conditioned_proba
+    t = rand(𝒯) * conditioned_proba
+    proba0 = zero(𝒯) # it is >= 0 already!
+    cw = zero(𝒯)
+    for nₐ = UInt32(1):n_angles
+        # compute proba
+        proba0 = fodf[nₐ, voxel_index₁, voxel_index₂, voxel_index₃]
+        cone_c = cone[nₐ, ind_u0]
+        cw += proba0 * cone_c
+        if cw >= t
+            ind_u = nₐ
+            break
+        end
+    end
+    return ind_u
 end

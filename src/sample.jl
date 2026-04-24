@@ -10,13 +10,15 @@ end
 
 # for plotting
 function _init(model::TMC{𝒯, PlottingFOD},
-                alg::AbstractNotPureRejectionSampler; 
+                alg::AbstractNotPureRejectionSampler,
+                basis::SphericalHarmonics;
                 n_sphere = 400) where {𝒯}
     _init_fibonacci_sh(model, n_sphere)
 end
 
 function _init(model::TMC{𝒯, PreComputeAllFOD},
-                alg::AbstractNotPureRejectionSampler; 
+                alg::AbstractNotPureRejectionSampler,
+                basis::SphericalHarmonics; 
                 n_sphere = 400) where {𝒯}
     cache = _init_fibonacci_sh(model, n_sphere)
     _build_cache_from_Y_matrix(model, cache, cache.Yₗₘ)

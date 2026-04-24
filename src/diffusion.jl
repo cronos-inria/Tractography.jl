@@ -42,7 +42,8 @@ function init(model::TMC{𝒯, DirectFOD},
 end
 
 function _init(model::TMC{𝒯, PreComputeAllFOD},
-                alg::AbstractSDESampler;
+                alg::AbstractSDESampler,
+                basis::SphericalHarmonics;
                 n_sphere = 400) where 𝒯
     # we want to differentiate wrt (θ,ϕ) the expression mollifier(fodf(θ,ϕ))
     # the expression is ∂mollifier(fodf(θ,ϕ)) * ∂fodf(θ,ϕ)
@@ -91,7 +92,7 @@ function init(model::TMC{𝒯},
                 n_sphere = 400,
                 𝒯ₐ = Array{𝒯},
                 ) where {𝒯, Talg <: AbstractSDESampler}
-    cache_cpu = _init(model, _get_alg(alg); n_sphere)
+    cache_cpu = _init(model, _get_alg(alg), get_basis(model); n_sphere)
     # do not copy the array if the types are the same
     _is_on_cpu = cache_cpu.odf isa 𝒯ₐ
     ∫odf = sum(cache_cpu.odf, dims = 1)[1, :, :, :]

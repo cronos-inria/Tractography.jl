@@ -19,7 +19,7 @@ function init(model::TMC{𝒯},
                 n_sphere = 400,
                 𝒯ₐ = Array{𝒯},
                 ) where 𝒯
-    cache_cpu = _init(model, _get_alg(alg); n_sphere)
+    cache_cpu = _init(model, _get_alg(alg), get_basis(model); n_sphere)
     # do not copy the array if the types are the same
     _is_on_cpu = cache_cpu.odf isa 𝒯ₐ
 

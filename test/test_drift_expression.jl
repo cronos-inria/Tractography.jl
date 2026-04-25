@@ -58,7 +58,7 @@ for i in axes(seeds, 2)
     seeds[:,i] .= vcat(10, 10, 10, TG.spherical_to_euclidean(_t0,_p0)...)
 end
 
-model_d = TG.TMC(Δt = 𝒯(0.00025),
+model_d = TG.Model(Δt = 𝒯(0.00025),
                 foddata = TG.FODData(_fod, Array{𝒯}(1000*I(4)), zeros(4), false), # we put an enormous voxel size
                 proba_min = 𝒯(0.0),
                 evaluation_algo = TG.DirectFOD()

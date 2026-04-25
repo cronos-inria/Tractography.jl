@@ -1,6 +1,6 @@
 using CairoMakie, NIfTI
 
-model = Tractography.TMC(Δt = 0.125f0,
+model = Tractography.Model(Δt = 0.125f0,
             foddata = Tractography.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
             cone = Tractography.Cone(15),
             proba_min = 0.005f0,

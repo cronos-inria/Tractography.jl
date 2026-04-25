@@ -213,44 +213,44 @@ end
 """
 $(TYPEDEF)
 
-Tractography Markov Chain (TMC).
+Model of streamlines.
 
 # Internal fields (with default values):
 $(TYPEDFIELDS)
 
 # Methods
 - `_apply_mask!(model, mask)` apply a mask to the raw SH tensor. See its doc string.
-- `_getdata(model)` return the fodf data associated with the TMC.
+- `_getdata(model)` return the fodf data associated with the model.
 - `size(model)` return `nx, ny, nz, nt`.
 - `eltype(model)` return the scalar type of the data (default Float64).
 - `get_lmax(model)` return the max `l` coordinate in of spherical harmonics.
 
 # Constructors (pass the internal fields!)
-- `TMC()`
-- `TMC(Δt = 0.1f0)` for a Float32 TMC
-- `TMC(Δt = 0.1, proba_min = 0.)` for a Float64 TMC. You need to specify both fields `Δt` and `proba_min`
-- `TMC(odfdata = rand(10,10,10,45))` for custom ODF
+- `Model()`
+- `Model(Δt = 0.1f0)` for a Float32 Model
+- `Model(Δt = 0.1, proba_min = 0.)` for a Float64 Model. You need to specify both fields `Δt` and `proba_min`
+- `Model(odfdata = rand(10,10,10,45))` for custom ODF
 """
-@with_kw_noshow struct TMC{𝒯, 𝒯alg <: AbstractFODEvaluation, 𝒯d, 𝒯C, 𝒯mol}
-    "Step size of the TMC."
+@with_kw_noshow struct Model{𝒯, 𝒯alg <: AbstractFODEvaluation, 𝒯d, 𝒯C, 𝒯mol}
+    "Step size of the Model."
     Δt::𝒯 = 0.1f0
     "Spherical harmonics evaluation algorithm. Can be `PreComputeAllFOD()`, `DirectFOD()`."
     evaluation_algo::𝒯alg = PreComputeAllFOD()
     "ODF data, typically from nifti file but can be passed as an Array. Must be the list of ODF in the base of spherical harmonics. Hence, it should be an (abstract) 4d array."
     foddata::𝒯d = nothing
-    "Cone function to restrict angle diffusion. You can use a `Cone` or a custom function `(d1, d2) -> return_a_boolean`."
+    "Cone function to restrict orientation sample. You can use a `Cone` or a custom function `(d1, d2) -> return_a_boolean`."
     cone::𝒯C = Cone(90f0)
     "Probability below which we stop tracking."
     proba_min::𝒯 = 0.0f0
     "Mollifier, used to make the fodf non negative. During odf evaluation, we effectively use `mollifier(fodf[angle,i,j,k])`."
     mollifier::𝒯mol = max_mollifier
 end
-@inline getdata(model::TMC) = model.foddata
-Base.size(model::TMC) = size(getdata(model))
-Base.eltype(model::TMC{𝒯}) where 𝒯 = 𝒯
-@inline get_lmax(model::TMC) = get_lmax(getdata(model))
-@inline get_basis(model::TMC) = get_basis(getdata(model))
-@inline get_evaluation(model::TMC) = model.evaluation_algo
+@inline getdata(model::Model) = model.foddata
+Base.size(model::Model) = size(getdata(model))
+Base.eltype(model::Model{𝒯}) where 𝒯 = 𝒯
+@inline get_lmax(model::Model) = get_lmax(getdata(model))
+@inline get_basis(model::Model) = get_basis(getdata(model))
+@inline get_evaluation(model::Model) = model.evaluation_algo
 
 """
 $(TYPEDSIGNATURES)
@@ -258,11 +258,11 @@ $(TYPEDSIGNATURES)
 `max(x, 0)` as mollifier to prevent negative ODF.
 """
 max_mollifier(x) = max(0, x)
-get_range(model::TMC) = get_range(getdata(model))
-get_array(model::TMC) = _get_array(getdata(model))
+get_range(model::Model) = get_range(getdata(model))
+get_array(model::Model) = _get_array(getdata(model))
 
-function Base.show(io::IO, model::TMC)
-    printstyled(io, "TMC with elype ", eltype(model), bold = true, color = :cyan)
+function Base.show(io::IO, model::Model)
+    printstyled(io, "Model with elype ", eltype(model), bold = true, color = :cyan)
     println(io, "\n ├─ Δt = ", model.Δt)
     println(io, " ├─ minimal probability     = ", model.proba_min)
     if model.cone isa Cone
@@ -286,7 +286,7 @@ Multiply the mask which is akin to a matrix of `Bool` with same size as the data
 
 # Arguments
 
-- `model::TMC`.
+- `model::Model`.
 - `mask` can be a `AbstractArray{3, Bool}` or a `NIVolume`.
 """
 function _apply_mask!(model, mask)

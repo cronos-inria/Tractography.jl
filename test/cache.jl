@@ -2,7 +2,7 @@ using Test, LinearAlgebra, Accessors
 using Tractography
 const TG = Tractography
 
-model = TMC(Δt = 0.125f0,
+model = Model(Δt = 0.125f0,
             foddata = TG.FODData("../examples/fod-FC.nii.gz"),
             cone = Cone(45f0),
             )

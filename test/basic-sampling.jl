@@ -21,7 +21,7 @@ v0 = normalize(rand(3)); v0 .-= dot(p0,v0) .* p0
 u = Tractography.Exp𝕊²(p0, v0, 0.2)
 @test norm(u) ≈ 1
 
-model = Tractography.TMC(Δt = 0.125f0,
+model = Tractography.Model(Δt = 0.125f0,
             foddata = Tractography.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
             cone = Tractography.Cone(15),
             proba_min = 0.005f0,
@@ -37,7 +37,7 @@ Tractography.sample(model, Tractography.Probabilistic(), rand(Float32, 6, 2); nt
 Tractography.sample(model, Tractography.Connectivity(Tractography.Probabilistic()), rand(Float32, 6, 2); nt = 10);
 
 for eval_alg in (Tractography.DirectFOD(), Tractography.PreComputeAllFOD())
-    model_diffusion = Tractography.TMC(Δt = 0.001f0,
+    model_diffusion = Tractography.Model(Δt = 0.001f0,
                 foddata = Tractography.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
                 proba_min = 0.0f0,
                 evaluation_algo = eval_alg,

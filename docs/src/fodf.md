@@ -10,7 +10,7 @@ Depth = 3
 
 We detail the various ways fODF can be expressed. They are specified by a basis and an [evaluation strategy](@ref sheval).
 
-The `basis` is passed to the `FODData`. The evolution strategy is passed to the model (e.g. a `TMC`, `Diffusion`, etc.).
+The `basis` is passed to the `FODData`. The evolution strategy is passed to the model (e.g. a `Model`, `Diffusion`, etc.).
 
 # Basis for expressing fODF
 
@@ -40,7 +40,7 @@ foddata = TG.FODData(rand(10,10,10,10), false)
 
 # Evaluation strategies
 
-When sampling the streamlines, fODF have to be evaluated on the basis provided to `FODData`. The evaluation strategy is passed to a model (e.g. `TMC`).
+When sampling the streamlines, fODF have to be evaluated on the basis provided to `FODData`. The evaluation strategy is passed to a model (e.g. `Model`).
 
 We provide two modes of evaluation
 1. the fODF are precomputed for various directions on the sphere and stored in a cache. This corresponds to passing `evaluation_algo = PreComputeAllFOD()` to the model. The number of sampling points on sphere is passed to the function `TG.sample` or `TG.sample!`.

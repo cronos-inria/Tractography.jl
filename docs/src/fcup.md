@@ -8,12 +8,12 @@ Depth = 3
 This is a more advanced tutorial because we want to show how to apply a mask.
 
 
-# Define the TMC
+# Define the Model
 
 ```@example FCUP
 import Tractography as TG
 
-model = TG.TMC(Δt = 0.125f0,
+model = TG.Model(Δt = 0.125f0,
             foddata = TG.FODData((@__DIR__) * "/../../examples/fod-FC.nii.gz"),
             cone = TG.Cone(45),
             proba_min = 0.015f0,

@@ -12,7 +12,7 @@ Let's start by loading FOD data from a NIfTI file:
 using Tractography
 const TG = Tractography
 
-model = TG.TMC(Δt = 0.125f0,
+model = TG.Model(Δt = 0.125f0,
             foddata = TG.FODData((@__DIR__) * "/../../examples/fod-FC.nii.gz"),
             cone = TG.Cone(15f0),
             proba_min = 0.005f0,

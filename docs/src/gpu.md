@@ -12,8 +12,8 @@ To maximize throughput, we use `Float32`.
 using Tractography
 const TG = Tractography
 
-# use the TMC as the streamline model
-model = TMC(Δt = 0.125f0,
+# use the Model as the streamline model
+model = Model(Δt = 0.125f0,
             foddata = FODData((@__DIR__) * "/../../examples/fod-FC.nii.gz"),
             cone = Cone(45f0),
             proba_min = 0.005f0,

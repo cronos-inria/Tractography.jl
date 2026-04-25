@@ -3,13 +3,13 @@ const TG = Tractography
 
 TG.FODData(rand(10,10,10,10), false)
 
-model = TG.TMC(Δt = 0.1, proba_min = 0.0,
+model = TG.Model(Δt = 0.1, proba_min = 0.0,
             foddata = TG.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz",
             basis = TG.DTI()
             )
 )
 
-model = TG.TMC(Δt = 0.1, proba_min = 0.0,
+model = TG.Model(Δt = 0.1, proba_min = 0.0,
             foddata = TG.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz")
 )
 TG.issymmetric(model.foddata.basis)

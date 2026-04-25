@@ -15,16 +15,18 @@ Step **1** — estimating FODs — should be performed using a dedicated library
 
 ## Model of streamlines specification
 
-The model can either be
-- Tractography Markov Chain (TMC)
+The model of strealimes can either be
+- Tractography Markov Chain
 - Diffusion
 - Transport
+
+In practice, the general model is specified by a `Model` while the simulation algorithm `Probabilistic, Deterministic, Diffusion, Transport` selects the model of streamlines.
 
 ---
 
 ## FOD specification
 
-The FOD can be supplied to the model by the keyword argument `foddata`. See [`Tractography.TMC`](@ref) for more details. Now, you can pass to `foddata` a `Tractography.FODData` object (see [`Tractography.FODData`](@ref) for more information), which can be created:
+The FOD can be supplied to the model by the keyword argument `foddata`. See [`Tractography.Model`](@ref) for more details. Now, you can pass to `foddata` a `Tractography.FODData` object (see [`Tractography.FODData`](@ref) for more information), which can be created:
 - from a NIfTI file using the simplified `Tractography.FODData` constructor.
 - from an `AbstractArray` object using directly the `Tractography.FODData` constructor.
 

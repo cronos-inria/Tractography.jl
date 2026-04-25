@@ -8,13 +8,13 @@ This tutorial will introduce you to the functionalities for computing streamline
 
 # Basic use
 
-In this example, we sample `Nmc` streamlines from a `TMC` model.
+In this example, we sample `Nmc` streamlines from a `Model` model.
 
 ```@example GS
 using Tractography
 const TG = Tractography
 
-model = TMC(Δt = 0.125f0,
+model = Model(Δt = 0.125f0,
             foddata = FODData((@__DIR__) * "/../../examples/fod-FC.nii.gz"),
             )
 Nmc = 10
@@ -24,12 +24,12 @@ streamlines, tract_length = sample(model, alg, seeds);
 size(streamlines)
 ```
 
-## Step 1: Define a TMC
+## Step 1: Define a Model
 
-We define a Tractography Markov Chain (TMC) model as follows:
+We define a Tractography Markov Chain (Model) model as follows:
 
 ```@example GS
-model = TMC(Δt = 0.125f0,
+model = Model(Δt = 0.125f0,
             foddata = FODData((@__DIR__) * "/../../examples/fod-FC.nii.gz"),
             )
 ```
@@ -62,7 +62,7 @@ streamlines, tract_length = sample(model, alg, seeds);
 When computing multiple batches for the same model, it is more efficient to precompute a cache once and reuse it.
 
 ```@example GS
-model = TMC(Δt = 0.125f0,
+model = Model(Δt = 0.125f0,
             foddata = FODData((@__DIR__) * "/../../examples/fod-FC.nii.gz"),
             )
 Nmc = 10

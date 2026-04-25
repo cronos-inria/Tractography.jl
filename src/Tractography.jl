@@ -10,8 +10,8 @@ module Tractography
 
     # sampling method of FODF
     export DirectFOD, PreComputeAllFOD
-    export FODData, TMC, Cone, sample, init
     export Probabilistic, Deterministic, Diffusion, Connectivity
+    export FODData, Model, Cone, sample, init
     export save_streamlines
 
     # plotting
@@ -23,7 +23,7 @@ module Tractography
     include("data.jl")
     include("utils.jl")
     include("sph.jl")
-    include("tmccache.jl")
+    include("modelcache.jl")
     include("sample.jl")
     include("gpu.jl")
     include("diffusion.jl")

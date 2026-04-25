@@ -14,7 +14,7 @@ Create a cache for computing streamlines in batches. This is useful for memory-l
 - `n_sphere::Int = 400` number of points to discretize the sphere for spherical harmonics evaluation.
 - `𝒯ₐ = Array{𝒯}` array type for the cache. Pass a GPU array type like `CuArray` to run on GPU; leave as `Array` for CPU.
 """
-function init(model::TMC{𝒯},
+function init(model::Model{𝒯},
                 alg; 
                 n_sphere = 400,
                 𝒯ₐ = Array{𝒯},
@@ -38,12 +38,12 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Sample the TMC `model` in place by overwriting `streamlines`. Uses minimal memory and can run indefinitely on GPU.
+Sample the `model` in place by overwriting `streamlines`. Uses minimal memory and can run indefinitely on GPU.
 
 # Arguments
 - `streamlines` array with shape `3 x nt x Nmc`. `nt` is the maximum length per streamline. `Nmc` is the number of Monte-Carlo simulations.
 - `streamlines_length` lengths of the streamlines.
-- `model::TMC` model to sample from.
+- `model::Model` model to sample from.
 - `alg` sampling algorithm: `Deterministic`, `Probabilistic`, `Diffusion`, etc.
 - `seeds` matrix of size `6 x Nmc` with positions (x,y,z) and directions (u,v,w).
 
@@ -55,7 +55,7 @@ Sample the TMC `model` in place by overwriting `streamlines`. Uses minimal memor
 """
 function sample!(streamlines, 
                   streamlines_length,
-                  model::TMC{𝒯}, 
+                  model::Model{𝒯}, 
                   cache::AbstractCache, 
                   alg,
                   seeds;
@@ -69,7 +69,7 @@ function sample!(streamlines,
     _, nx, ny, nz = size(cache.odf)
     streamlines_length .= nₜ
     if isnothing(cache.cone)
-        error("You did not pass a cone function to TMC!")
+        error("You did not pass a cone function to the model")
     end
     if saveat > 1
         error("This option is not yet available. Open an issue on the website if you want this feature.")

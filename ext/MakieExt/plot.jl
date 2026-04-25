@@ -82,7 +82,7 @@ The optional parameters are passed to `lines!`.
     return ax
 end
 ####################################################################################################
-function plot_fod(model::TMC; k...)
+function plot_fod(model::Model; k...)
     f = Figure(backgroundcolor = :black)
     lscene = LScene(f[1, 1], scenekw = (lights = [
                             AmbientLight(RGBf(1, 1, 1)), 
@@ -104,14 +104,14 @@ Plot the the ODF with glyphs.
 
 ## Arguments
 - `ax` GLMakie scene
-- `model::TMC`
+- `model::Model`
 
 ## Optional arguments
 - `I, J, K`: range for displaying the fODFs. Some of them can be a single element, like `K = 40:40`.
 - `radius`: radius of the glyph.
 - `st = 4`: stride, only show one over `st` glyph in each direction.
 """
-function plot_fod!(ax, model::TMC{𝒯} ; 
+function plot_fod!(ax, model::Model{𝒯} ; 
                     n_sphere = 10,
                     radius = 0.1,
                     st = 4,
@@ -148,7 +148,7 @@ function plot_fod!(ax, model::TMC{𝒯} ;
     @info "Dimension" size(Is) size(Js) size(Ks) Is Js Ks c0min
 
     n_glygths = sum(ni.data[Is, Js, Ks, 1] .> c0min)
-    all_pts   = Matrix{Float32}(undef, n_glygths * n_pts0, 3) 
+    all_pts   = Matrix{Float32}(undef, n_glygths * n_pts0, 3)
     all_faces = Matrix{UInt32}(undef, n_faces0 * n_glygths, 3)
 
     n_elements = 0
@@ -205,7 +205,7 @@ Plot a slice of the data.
 - `plot_slice!`
 
 ## Arguments
-- `model::TMC`
+- `model::Model`
 
 ## Optional arguments
 - `odf::Bool` display the ODF with glyphs.

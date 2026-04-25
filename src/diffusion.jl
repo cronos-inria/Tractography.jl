@@ -14,12 +14,12 @@ See https://github.com/JuliaManifolds/ManifoldsBase.jl/blob/5c4a61ed3e5e44755a22
     return c .* p .+ (s / n) .* X
 end
 ####################################################################################################
-function init(model::TMC{𝒯, DirectFOD},
+function init(model::Model{𝒯, DirectFOD},
                 alg::Union{Talg, Connectivity{ Talg}};
                 𝒯ₐ = Array{𝒯},
                 n_sphere = 0) where {𝒯, Talg <: AbstractSDESampler}
     ni = 𝒯.(get_array(model))
-    cache_cpu = TMCCache(; n_sphere, angles = 0, lmax = get_lmax(model), dΩ = zero(𝒯))
+    cache_cpu = ModelCache(; n_sphere, angles = 0, lmax = get_lmax(model), dΩ = zero(𝒯))
     fod = permutedims(ni, (4, 1, 2, 3))
     if is_normalized(model.foddata)
         fod ./= 𝒯(sqrt(4pi))
@@ -40,7 +40,7 @@ function init(model::TMC{𝒯, DirectFOD},
     )
 end
 
-function _init(model::TMC{𝒯, PreComputeAllFOD},
+function _init(model::Model{𝒯, PreComputeAllFOD},
                 alg::AbstractSDESampler,
                 basis::SphericalHarmonics;
                 n_sphere = 400) where 𝒯
@@ -86,7 +86,7 @@ function _init(model::TMC{𝒯, PreComputeAllFOD},
     return cache
 end
 
-function init(model::TMC{𝒯},
+function init(model::Model{𝒯},
                 alg::Union{Talg, Connectivity{ Talg}};
                 n_sphere = 400,
                 𝒯ₐ = Array{𝒯},
@@ -113,7 +113,7 @@ end
 ####################################################################################################
 function sample!(streamlines,
                 streamlines_length::AbstractArray{UInt32, 1},
-                model::TMC{𝒯}, 
+                model::Model{𝒯}, 
                 cache::AbstractCache, 
                 alg::Union{AbstractSDESampler, Connectivity{ <: AbstractSDESampler}},
                 seeds::AbstractMatrix{𝒯};

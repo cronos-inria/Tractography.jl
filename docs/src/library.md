@@ -40,7 +40,7 @@ Tractography.FODData
 ```
 
 ```@docs
-Tractography.TMC
+Tractography.Model
 ```
 
 ## Algorithms

@@ -5,7 +5,7 @@ Makie.inline!(true)
 ENV["JULIA_DEBUG"] = Tractography
 
 # define the model for TMC
-model = TMC(Δt = 0.125f0,
+model = TG.Model(Δt = 0.125f0,
             foddata = FODData("fod-FC.nii.gz"),
             # odfdata = ODFData("cross-fod.nii.gz"),
             cone = Cone(15f0),

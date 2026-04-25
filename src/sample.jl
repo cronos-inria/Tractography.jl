@@ -1,22 +1,22 @@
-function _init_fibonacci_sh(model::TMC{𝒯}, n_sphere) where {𝒯}
+function _init_fibonacci_sh(model::Model{𝒯}, n_sphere) where {𝒯}
     lmax = get_lmax(model)
     angles = fibonacci_sampling(n_sphere, 𝒯)
     directions = [spherical_to_euclidean(d[1], d[2]) for d in angles]
     n_angles = length(angles)
     Yₗₘ = get_vector_of_sh(angles, lmax)
     cone = isnothing(model.cone) ? nothing : [𝒯(model.cone(d1, d2)) for d1 in directions, d2 in directions]
-    TMCCache(; n_sphere = n_angles, Yₗₘ, dΩ = 𝒯(4pi / n_angles), angles, lmax, cone, directions)
+    ModelCache(; n_sphere = n_angles, Yₗₘ, dΩ = 𝒯(4pi / n_angles), angles, lmax, cone, directions)
 end
 
 # for plotting
-function _init(model::TMC{𝒯, PlottingFOD},
+function _init(model::Model{𝒯, PlottingFOD},
                 alg::AbstractNotPureRejectionSampler,
                 basis::SphericalHarmonics;
                 n_sphere = 400) where {𝒯}
     _init_fibonacci_sh(model, n_sphere)
 end
 
-function _init(model::TMC{𝒯, PreComputeAllFOD},
+function _init(model::Model{𝒯, PreComputeAllFOD},
                 alg::AbstractNotPureRejectionSampler,
                 basis::SphericalHarmonics; 
                 n_sphere = 400) where {𝒯}
@@ -24,7 +24,7 @@ function _init(model::TMC{𝒯, PreComputeAllFOD},
     _build_cache_from_Y_matrix(model, cache, cache.Yₗₘ)
 end
 
-function _build_cache_from_Y_matrix(model::TMC{𝒯}, cache, Ysv) where {𝒯}
+function _build_cache_from_Y_matrix(model::Model{𝒯}, cache, Ysv) where {𝒯}
     na = size(Ysv, 1)
     # compute all ODF
     nx, ny, nz, nt = size(model)
@@ -42,10 +42,10 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Sample the TMC `model`.
+Sample the Model `model`.
 
 ## Arguments
-- `model::TMC`
+- `model::Model`
 - `alg` sampling algorithm, `Deterministic, Probabilistic, Diffusion, etc`.
 - `seeds` matrix of size `6 x Nmc` where `Nmc` is the number of Monte-Carlo simulations to be performed.
 - `mask = nothing` matrix of boolean where to stop computation. See also `_apply_mask`.
@@ -62,7 +62,7 @@ Sample the TMC `model`.
 ## Output
 - `streamlines` with shape `3 x nt x Nmc`
 """
-function sample(model::TMC{𝒯},
+function sample(model::Model{𝒯},
                 alg::AbstractSampler,
                 seeds::AbstractMatrix{𝒯},
                 mask::Union{Nothing, AbstractArray{Bool}} = nothing;

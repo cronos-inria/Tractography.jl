@@ -7,7 +7,7 @@ Cache for computing streamlines in `sample`.
 
 $(TYPEDFIELDS)
 """
-@with_kw_noshow struct TMCCache{𝒯y, 𝒯a, 𝒯dir, 𝒯d, 𝒯c, 𝒯all, 𝒯alld1, 𝒯alld2} <: AbstractCache
+@with_kw_noshow struct ModelCache{𝒯y, 𝒯a, 𝒯dir, 𝒯d, 𝒯c, 𝒯all, 𝒯alld1, 𝒯alld2} <: AbstractCache
     "Matrix for holding the real orthonormal spherical harmonics sampled on a grid."
     Yₗₘ::𝒯y = nothing
     "Matrix for holding the θ derivative of orthonormal spherical harmonics sampled on a grid."
@@ -35,8 +35,8 @@ $(TYPEDFIELDS)
 end
 @inline get_angles(cache, ii) = cache.angles[ii]
 
-function Base.show(io::IO, cache::TMCCache{𝒯y, 𝒯a, 𝒯dir, 𝒯d, 𝒯c, 𝒯all, 𝒯alld1, 𝒯alld2}) where {𝒯y, 𝒯a, 𝒯dir, 𝒯d, 𝒯c, 𝒯all, 𝒯alld1, 𝒯alld2}
-    printstyled(io, "TMCCache (subset)"; bold = true, color = :cyan)
+function Base.show(io::IO, cache::ModelCache{𝒯y, 𝒯a, 𝒯dir, 𝒯d, 𝒯c, 𝒯all, 𝒯alld1, 𝒯alld2}) where {𝒯y, 𝒯a, 𝒯dir, 𝒯d, 𝒯c, 𝒯all, 𝒯alld1, 𝒯alld2}
+    printstyled(io, "ModelCache (subset)"; bold = true, color = :cyan)
     printstyled(io, "\n ├─ size : $(round(Base.summarysize(cache)/1024^3, digits=3)) GiB"; bold = true)
     println(io,   "\n ├─ dΩ::$𝒯d  : ", cache.dΩ)
     println(io,   " ├─ Yₗₘ  : ", 𝒯y)
@@ -63,7 +63,7 @@ Cache specific to threaded or GPU computations.
 $(TYPEDFIELDS)
 """
 struct ThreadedCache{𝒯a, 𝒯c, 𝒯ai, 𝒯ang, 𝒯, 𝒯s} <: AbstractCache
-    "Array of all ODF values. See also `TMCCache`."
+    "Array of all ODF values. See also `ModelCache`."
     odf::𝒯a
     "Array of all ∂θ ODF values."
     ∂θodf::𝒯a

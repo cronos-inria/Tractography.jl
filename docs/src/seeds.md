@@ -11,7 +11,7 @@ using Tractography
 const TG = Tractography
 
 # Load FOD data
-model = TG.TMC(
+model = TG.Model(
     foddata = TG.FODData("path/to/fod.nii.gz"),
     # other arguments ...
 )

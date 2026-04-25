@@ -22,7 +22,7 @@ where $c(\bm{u}, \bm{u}') \in \mathbb{R}^+$ is non--zero in a cone around $\bm{u
 $$\int_{\mathbb{S}^2}g(\bm{x}, \bm{u}, \bm{u}')d\bm{u}' = 1.$$
 
 !!! tip "Cone"
-    The cone function is passed to a `TMC` via [`Tractography.TMC`](@ref). The `TMC` also determine how the FOD are computed, see [SH evaluation](@ref sheval).
+    The cone function is passed to a `Model` via [`Tractography.Model`](@ref). The `Model` also determine how the FOD are computed, see [SH evaluation](@ref sheval).
 ## 1. Deterministic
 
 The algorithm `alg = Deterministic()` (see [`Tractography.Deterministic`](@ref)) implements the following situation. We compute a sequence $(\bm x_i, \bm u_i)_i$ such that

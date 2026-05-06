@@ -75,7 +75,7 @@ function _init(model::Model{𝒯, PreComputeAllFOD},
     mollifier = alg.mollifier
     d_mollifier = alg.d_mollifier
 
-    cache = _init_fibonacci_sh(model, n_sphere)
+    cache = _init_fibonacci_and_sph(model, n_sphere)
     angles = cache.angles
     na = n_sphere + 1
     lmax = get_lmax(model)

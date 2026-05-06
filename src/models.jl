@@ -225,6 +225,9 @@ $(TYPEDFIELDS)
 - `eltype(model)` return the scalar type of the data (default Float64).
 - `get_lmax(model)` return the max `l` coordinate in of spherical harmonics.
 
+!!! danger "Spherical harmonics (SPH) basis issues"
+    SPH bases do not enforce positivity of the FODF, which is required for a proper probability distribution. This is mitigated by passing the FODF through a mollifier in `Model`, but this alters the probabilities. A second issue is the Gibbs phenomenon, which introduces oscillations near discontinuities in the spherical signal. All this make SPH a not very good basis for tractography.
+
 # Constructors (pass the internal fields!)
 - `Model()`
 - `Model(Δt = 0.1f0)` for a Float32 Model

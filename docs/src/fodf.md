@@ -15,7 +15,7 @@ The `basis` is passed to the `FODData`. The evolution strategy is passed to the 
 
 This case corresponds to `basis = SphericalHarmonics()` which is the default. The set of fODFs can be passed in two ways.
 
-!!! warning "Spherical harmonics (SPH) basis issues"
+!!! danger "Spherical harmonics (SPH) basis issues"
     SPH bases do not enforce positivity of the FODF, which is required for a proper probability distribution. This is mitigated by passing the FODF through a mollifier in `Model`, but this alters the probabilities. A second issue is the Gibbs phenomenon, which introduces oscillations near discontinuities in the spherical signal. All this make SPH a not very good basis for tractography.
 
 ### Provided by a file

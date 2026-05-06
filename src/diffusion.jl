@@ -145,10 +145,12 @@ function sample!(streamlines,
     nth = backend isa KA.GPU ? gputhreads : nthreads
     kernel! = _sample_kernel_diffusion!(backend, nth)
     _alg = _get_alg(alg)
+    _basis = get_basis(model)
     @time "kernel-diffusion" kernel!(
                             streamlines,
                             streamlines_length,
                             _alg,
+                            _basis,
                             seeds,
                             cache.odf,
                             cache.∂θodf,
@@ -178,7 +180,8 @@ end
 KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                             streamlines::AbstractArray{𝒯, 3},
                             streamlines_length::AbstractArray{UInt32, 1},
-                            alg::AbstractSDESampler{𝒯},
+                            alg::AbstractSDESampler{𝒯}, # needed for Transport vs Diffusion
+                            @Const(basis::Abstract_fODFBasis),
                             @Const(seeds::AbstractMatrix{𝒯}),
                             @Const( fodf::AbstractArray{𝒯, 4}),
                             @Const(∂θodf::AbstractArray{𝒯, 4}),

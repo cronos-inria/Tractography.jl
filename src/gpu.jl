@@ -190,7 +190,6 @@ KA.@kernel inbounds=true function _sample_kernel!(
     # streamline length
     t_length::UInt32 = 1
 
-    inside_image::Bool = true
     continue_tracking::Bool = true
 
     total_proba = conditioned_proba = zero(𝒯)

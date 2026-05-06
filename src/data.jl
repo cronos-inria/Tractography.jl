@@ -63,7 +63,7 @@ Structure to hold FOD data.
 $(TYPEDFIELDS)
 
 # Methods
-- `get_lmax(::FODData)` returns the max `l` coordinate in of spherical harmonics.
+- `get_lmax(::FODData)` returns the max `l` coordinate of spherical harmonics.
 - `size(::FODData)` returns the size of the data.
 - `get_range(::FODData)` returns the range of the data in the real world coordinates.
 - `is_normalized(::FODData)` return whether the data is normalized.
@@ -82,7 +82,7 @@ struct FODData{𝒯, 𝒯d, 𝒯s, 𝒯t, 𝒯b, 𝒯i}
     filename::String
     "field which contains the FOD data."
     data::𝒯d
-    "max l coordinate in of spherical harmonics."
+    "max l coordinate of spherical harmonics."
     lmax::Int
     "transform associated with data, see `Transform`."
     transform::Transform{𝒯s, 𝒯t}
@@ -97,7 +97,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-max `l` coordinate in of spherical harmonics.
+max `l` coordinate of spherical harmonics.
 """
 @inline get_lmax(foddata::FODData) = foddata.lmax
 Base.size(foddata::FODData) = size(foddata.data)
@@ -141,7 +141,8 @@ function FODData(data::AbstractArray{𝒯, 4},
                     normalize_it::Bool;
                     file_name = "None",
                     basis::𝒯b = SphericalHarmonics(),
-                    interpolation::𝒯i = NearestNeighbor()) where {𝒯, 𝒯s, 𝒯t, 𝒯b, 𝒯i}
+                    interpolation::𝒯i = NearestNeighbor()
+                    ) where {𝒯, 𝒯s, 𝒯t, 𝒯b, 𝒯i}
     lmax = get_lmax_from_fod_length(size(_get_array(data), 4))
     FODData{_my_typeof(data), typeof(data), 𝒯s, 𝒯t, 𝒯b, 𝒯i}(file_name, data, lmax, transform, normalize_it, basis, interpolation)
 end
@@ -226,8 +227,8 @@ function FODData(file_name::String;
     end
     @debug size(data) data.header
     A = NIfTI.getaffine(data.header)
-    S = SA.@SMatrix [A[i, j] for i = 1:4, j = 1:4]
-    T = SA.@SVector [A[i, end] for i = 1:3]
+    S = SA.SMatrix{4,4}(A)
+    T = SA.SVector{3}(A[1:3, end])
     return FODData(data, S, T, normalize_it; file_name, basis, interpolation)
 end
 

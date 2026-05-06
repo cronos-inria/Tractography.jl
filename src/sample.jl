@@ -33,7 +33,7 @@ function _build_cache_from_Y_matrix(model::Model{𝒯}, cache, Ysv) where {𝒯}
     na = size(Ysv, 1)
     # compute all FOD
     nx, ny, nz, nt = size(model)
-    # we optimize the array layout because loops occurs on the angle variable
+    # we optimize the array layout because loops occur on the angle variable
     # and julia is column major
     ni = 𝒯.(get_array(model))
     ni_v = reshape(ni, nx*ny*nz, nt)

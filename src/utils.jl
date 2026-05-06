@@ -112,6 +112,15 @@ end
     return ind_u
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Initialize the direction and voxel index for a new streamline.
+
+- If `maxfod_start && precomputed_odf`: picks the direction with the largest fODF at the starting voxel.
+- If `reverse_direction`: flips the direction.
+- If `precomputed_odf` without `maxfod_start` (or after reversal): snaps the direction to the nearest discrete index.
+"""
 @inline function _init_streamline(
                                     maxfod_start::Bool,
                                     reverse_direction::Bool,

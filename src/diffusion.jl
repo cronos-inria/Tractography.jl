@@ -182,7 +182,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                             @Const(evaluation_algo::AbstractFODEvaluation),
                             @Const(seeds::AbstractMatrix{𝒯}),
                             @Const(cache::ThreadedCache),
-                            @Const(transform), #sert a quoi?
+                            @Const(transform),
                             @Const(nₜ::UInt32),
                             @Const(maxfod_start::Bool),
                             @Const(reverse_direction::Bool),
@@ -224,13 +224,13 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     streamlines[3, 1, nₙₘ] = x₃
 
     conditioned_proba = zero(𝒯)
-    F = ∫F = Fθ = Fϕn = hx = zero(𝒯)
+    F = ∫F = ∂F∂θ = ∂F∂ϕ = hx = zero(𝒯)
     st = ct = sp = cp = zero(𝒯)
     θᵢ, ϕᵢ = euclidean_to_spherical(u₁, u₂, u₃)
     iₛₐᵥₑ::UInt32 = UInt32(2)
 
     # Riemannian Langevin algorithm [1]
-    # Karthik Bharath, Alexander Lewis, et al. Sampling and Estimation on Manifolds Using the Langevin Diﬀusion. n.d.
+    # Karthik Bharath, Alexander Lewis, et al. Sampling and Estimation on Manifolds Using the Langevin Diffusion. n.d.
     # X_{n+1}^h =\exp_{X_n^h}(  h/2⋅∇ E(X_n^h) + √h ⋅ g^{-1/2}(X_n^h) ⋅ ξ_{n+1})
 
     for iₜ = UInt32(2):nₜ
@@ -246,7 +246,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
             if precomputed_fod # static, removed at compilation
                 ind_u = _device_get_angle(cache.directions, u₁, u₂, u₃, n_angles)
             end
-            # Careful that ∂F∂θ = ∂(FODF)∂θ / sin(θ) to avoid division by zero
+            # Careful that ∂F∂ϕ = ∂(FODF)∂ϕ / sin(θ) to avoid division by zero
             F, ∂F∂ϕ, ∂F∂θ, ∫F = evaluate_for_diffusion(basis, evaluation_algo, ϕᵢ, θᵢ, ind_u, (voxel_index₁, voxel_index₂, voxel_index₃), cache)
             continue_tracking = ∫F > proba_min # recall ∫F ∈ [0, 1]
         end

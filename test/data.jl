@@ -1,4 +1,4 @@
-using Tractography, StaticArrays, Test
+using Tractography, StaticArrays, Test, NIfTI
 const TG = Tractography
 
 let
@@ -9,6 +9,9 @@ let
                 basis = TG.DTI()
                 )
     )
+    A = NIfTI.getaffine(niread((@__DIR__) * "/../examples/fod-FC.nii.gz"))
+    @test model.foddata.transform.S == A
+    @test model.foddata.transform.T == A[1:3,end]
 
     model = TG.Model(Δt = 0.1, proba_min = 0.0,
                 foddata = TG.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz")
@@ -29,7 +32,7 @@ let
 
     TG.from_fod(model, 10; maxfod_start = false)
     TG.from_fod(model, 10; maxfod_start = true)
-    mask = model.foddata.data[:,:,:,1].>0;
+    mask = model.foddata.data[:,:,:,1] .> 0;
     TG.from_mask(model, mask, 10)
 
     # add a mask and test normalization of FODF, ∫FODF = 1?

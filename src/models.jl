@@ -60,7 +60,7 @@ _get_alg(alg::Connectivity) = alg.alg
 """
 $(TYPEDEF)
 
-Tractography sampling of the Tractography Markov Chain (TMC) performed with the cumulative sum distribution. Can be used with the basis evalution strategy `PreComputeAllFOD`.
+Tractography sampling of the Tractography Markov Chain (TMC) performed with the cumulative sum distribution. Can be used with the basis evaluation strategy `PreComputeAllFOD`.
 
 # Constructor
 
@@ -71,7 +71,7 @@ struct Probabilistic <: AbstractNotPureRejectionSampler end
 """
 $(TYPEDEF)
 
-Tractography sampling of the Tractography Markov Chain (TMC) performed with the argmax function. Can be used with the basis evalution strategy `PreComputeAllFOD`.
+Tractography sampling of the Tractography Markov Chain (TMC) performed with the argmax function. Can be used with the basis evaluation strategy `PreComputeAllFOD`.
 """
 struct Deterministic <: DeterministicSampler end
 
@@ -95,7 +95,7 @@ If you want `Float64`, you have to pass the two scalars
     ```Diffusion(γ = 1.0, γ_noise = 1.0)```
 
 # Reference(s)
-[1] Bharath, K., Lewis, A., Sharma, A., & Tretyakov, M. V. (n.d.). Sampling and Estimation on Manifolds using the Langevin Diﬀusion.
+[1] Bharath, K., Lewis, A., Sharma, A., & Tretyakov, M. V. (n.d.). Sampling and Estimation on Manifolds using the Langevin Diffusion.
 """
 @with_kw_noshow struct Diffusion{T, Tmol, Tdmol} <: AbstractSDESampler{T}
     "γ parameter of the diffusion process. It is related to the curvature of the streamline."
@@ -188,7 +188,7 @@ end
 $(TYPEDEF)
 
 Structure to encode a cone to limit sampling the direction. 
-This ensures that the angle in degrees between to consecutive streamline directions is less than `angle`.
+This ensures that the angle in degrees between two consecutive streamline directions is less than `angle`.
 
 The implemented condition is for `cn = Cone(angle)`.
 
@@ -223,10 +223,10 @@ $(TYPEDFIELDS)
 - `_getdata(model)` return the fodf data associated with the model.
 - `size(model)` return `nx, ny, nz, nt`.
 - `eltype(model)` return the scalar type of the data (default Float64).
-- `get_lmax(model)` return the max `l` coordinate in of spherical harmonics.
+- `get_lmax(model)` return the max `l` coordinate of spherical harmonics.
 
 !!! danger "Spherical harmonics (SPH) basis issues"
-    SPH bases do not enforce positivity of the FODF, which is required for a proper probability distribution. This is mitigated by passing the FODF through a mollifier in `Model`, but this alters the probabilities. A second issue is the Gibbs phenomenon, which introduces oscillations near discontinuities in the spherical signal. All this make SPH a not very good basis for tractography.
+    SPH bases do not enforce positivity of the FODF, which is required for a proper probability distribution. This is mitigated by passing the FODF through a mollifier in `Model`, but this alters the probabilities. A second issue is the Gibbs phenomenon, which introduces oscillations near discontinuities in the spherical signal. All this makes SPH a not very good basis for tractography.
 
 # Constructors (pass the internal fields!)
 - `Model()`
@@ -265,7 +265,7 @@ get_range(model::Model) = get_range(getdata(model))
 get_array(model::Model) = _get_array(getdata(model))
 
 function Base.show(io::IO, model::Model)
-    printstyled(io, "Model with elype ", eltype(model), bold = true, color = :cyan)
+    printstyled(io, "Model with eltype ", eltype(model), bold = true, color = :cyan)
     println(io, "\n ├─ Δt = ", model.Δt)
     println(io, " ├─ minimal probability     = ", model.proba_min)
     if model.cone isa Cone

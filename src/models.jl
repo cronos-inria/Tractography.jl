@@ -242,7 +242,7 @@ $(TYPEDFIELDS)
     cone::𝒯C = Cone(90f0)
     "Probability below which we stop tracking."
     proba_min::𝒯 = 0.0f0
-    "Mollifier, used to make the fodf non negative. During odf evaluation, we effectively use `mollifier(fodf[angle,i,j,k])`."
+    "Mollifier, used to make the fodf non negative. During odf evaluation, we effectively use `mollifier(fodf[angle,i,j,k])`. You can also use softplus using `mollifier = Base.Fix2(softplus, 10)` or remove the mollifier using `mollifier = identity`."
     mollifier::𝒯mol = max_mollifier
 end
 @inline getdata(model::Model) = model.foddata

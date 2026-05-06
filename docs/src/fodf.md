@@ -5,9 +5,6 @@ Pages = ["fodf.md"]
 Depth = 3
 ```
 
-!!! warning "Spherical harmonics (SPH) basis requirement"
-    For now, we require the fODF to be specified in Spherical harmonics. You can lift this requirement by calling internals yourself. This will be made available in the API in the future.
-
 We detail the various ways fODF can be expressed. They are specified by a basis and an [evaluation strategy](@ref sheval).
 
 The `basis` is passed to the `FODData`. The evolution strategy is passed to the model (e.g. a `Model`, `Diffusion`, etc.).
@@ -16,7 +13,10 @@ The `basis` is passed to the `FODData`. The evolution strategy is passed to the 
 
 ## 1. Basis of spherical harmonics (SPH)
 
-This case corresponds to `basis = SphericalHarmonics()` which is the default. The set of fODFs can be passed in two ways. 
+This case corresponds to `basis = SphericalHarmonics()` which is the default. The set of fODFs can be passed in two ways.
+
+!!! warning "Spherical harmonics (SPH) basis issues"
+    SPH bases do not enforce positivity of the FODF, which is required for a proper probability distribution. This is mitigated by passing the FODF through a mollifier in `Model`, but this alters the probabilities. A second issue is the Gibbs phenomenon, which introduces oscillations near discontinuities in the spherical signal. All this make SPH a not very good basis for tractography.
 
 ### Provided by a file
 

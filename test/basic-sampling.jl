@@ -83,3 +83,23 @@ let
     
     TG._init((@set model.evaluation_algo = TG.PlottingFOD()), TG.Deterministic(), TG.get_basis(model))
 end
+########################
+# test the integral of spherical harmonics computed with fibonacci sampling
+let 
+    my_ylm(t,p,l,m) = TG.ro_sh(t,p,l,m)
+    N = 5000
+    angles = TG.fibonacci_sampling(N)
+    dΩ = 4π / N
+    s  = sum(my_ylm(θ, ϕ, 0, 0) for (θ, ϕ) in angles) * dΩ
+    @test s ≈ sqrt(4π) atol=sqrt(1/N)
+    println("Y₀₀: $s  (attendu √4π = $(sqrt(4π)))")
+    s2 = sum(my_ylm(θ, ϕ, 2, 1) for (θ, ϕ) in angles) * dΩ
+    @test s2 ≈ 0 atol=sqrt(1/N)
+    println("Y₂,1: $s2  (attendu 0)")
+    s3 = sum(my_ylm(θ, ϕ, 11, 2) for (θ, ϕ) in angles) * dΩ
+    @test s3 ≈ 0 atol=sqrt(1/N)
+    println("Y11,2: $s3  (attendu 0)")
+    s4 = sum(my_ylm(θ, ϕ, 22, 2) for (θ, ϕ) in angles) * dΩ
+    @test s4 ≈ 0 atol=sqrt(1/N)
+    println("Y22,2: $s4  (attendu 0)")
+end

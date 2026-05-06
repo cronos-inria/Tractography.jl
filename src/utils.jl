@@ -56,6 +56,13 @@ function fibonacci_sampling(N, 𝒯::DataType = Float64)
     return out
 end
 ####################################################################################################
+"""
+$(TYPEDSIGNATURES)
+
+Smooth approximation of the ReLU function. Computed as `log1p(exp(k*x)) / k`.
+The parameter `k` controls the steepness: as `k → ∞`, softplus approaches ReLU.
+For `k*x ≥ 30`, returns `x` directly to avoid overflow.
+"""
 @inline softplus(x, k = 1) = ifelse(k * x < 30, log1p(exp(k * x)) / k, x) # avoid Inf for x large
 @inline ∂softplus(x, k = 1) = 1 / (1 + exp(-k * x))
 ####################################################################################################

@@ -223,7 +223,7 @@ KA.@kernel inbounds=true function _sample_kernel!(
             # save current index of angle
             ind_u0 = ind_u
 
-            if conditioned_proba > proba_min / dΩ &&
+            if conditioned_proba * dΩ > proba_min &&
                         conditioned_proba > proba_min * total_proba
                 ind_u = next_orientation(alg,
                                          ind_u,
@@ -255,6 +255,17 @@ KA.@kernel inbounds=true function _sample_kernel!(
     streamlines_length[nₙₘ] = t_length
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Compute orientation probabilities for a given voxel.
+
+For each direction `i`, the conditioned probability is `fodf[i] * cone[i, ind_u]`.
+Returns a tuple `(conditioned_proba, total_proba, ind_max)` where:
+- `conditioned_proba`: sum of fODF × cone over all directions
+- `total_proba`: sum of raw fODF over all directions
+- `ind_max`: index of maximum probability (only meaningful for `DeterministicSampler`)
+"""
 @inline function orientation_probabilities(alg,
                                           fodf::AbstractArray{𝒯, 4},
                                           cone::AbstractMatrix{𝒯},
@@ -281,6 +292,14 @@ end
     return conditioned_proba, total_proba, ind_max
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Select the next orientation given the sampling algorithm.
+
+- `DeterministicSampler`: returns the index of the direction with maximum probability (`ind_max`).
+- `Probabilistic`: draws a random sample from the cumulative distribution of conditioned probabilities.
+"""
 @inline next_orientation(::DeterministicSampler,
                                   ind_u::UInt32,
                                   ind_max::UInt32,

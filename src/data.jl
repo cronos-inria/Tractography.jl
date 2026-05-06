@@ -236,12 +236,12 @@ $(TYPEDSIGNATURES)
 
 Normalize the data so that the first coefficient belongs to {0, 1}.
 """
-function _normalize_data!(data::AbstractArray{T, N}) where {T,N}
+function _normalize_data!(data::AbstractArray{𝒯, N}) where {𝒯, N}
     if N < 4; return; end
     nx,ny,nz, = size(data.raw)
-    Threads.@threads for k=1:nz
-        for j=1:ny
-            for i=1:nx
+    Threads.@threads for k = 1:nz
+        for j = 1:ny
+            for i = 1:nx
                 α = data.raw[i,j,k,1]
                 if α > 0
                     data.raw[i,j,k,:] ./= α

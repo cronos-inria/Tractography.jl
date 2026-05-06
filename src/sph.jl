@@ -72,6 +72,7 @@ It is mainly used to cache the harmonics Yₗₘ for later use (evaluation of FO
 # Arguments
 - `angles` a vector of tuples
 - `lmax::Int` maximum l for harmonics.
+- `der`: if `der=0` return  `ro_sh`. If `der=1` return `∂θro_sh` otherwise return `∂ϕro_sh`. 
 
 > The storage convention is explained in https://mrtrix.readthedocs.io/en/dev/concepts/spherical_harmonics.html#storage-conventions.
 """

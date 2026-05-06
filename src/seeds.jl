@@ -15,7 +15,7 @@ function from_fod(model::Model{𝒯}, n_seeds::Int; n_sphere = 1000, maxfod_star
     non_zeros = @views findall(x -> x>0, odfs[:, :, :, 1])
     n_zeros = length(non_zeros)
 
-    cache = _init_fibonacci_sh(model, n_sphere)
+    cache = _init_fibonacci_and_sph(model, n_sphere)
     odf = zeros(Float64, n_sphere+1)
     directions = cache.directions
 

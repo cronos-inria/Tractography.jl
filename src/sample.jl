@@ -4,7 +4,7 @@ function _init_fibonacci(model::Model{𝒯}, n_sphere) where {𝒯}
     (;angles, directions)
 end
 
-function _init_fibonacci_sh(model::Model{𝒯}, n_sphere) where {𝒯}
+function _init_fibonacci_and_sph(model::Model{𝒯}, n_sphere) where {𝒯}
     (;angles, directions) = _init_fibonacci(model, n_sphere)
     n_angles = length(angles)
     lmax = get_lmax(model)
@@ -18,14 +18,14 @@ function _init(model::Model{𝒯, PlottingFOD},
                 alg::AbstractNotPureRejectionSampler,
                 basis::SphericalHarmonics;
                 n_sphere = 400) where {𝒯}
-    _init_fibonacci_sh(model, n_sphere)
+    _init_fibonacci_and_sph(model, n_sphere)
 end
 
 function _init(model::Model{𝒯, PreComputeAllFOD},
                 alg::AbstractNotPureRejectionSampler,
                 basis::SphericalHarmonics; 
                 n_sphere = 400) where {𝒯}
-    cache = _init_fibonacci_sh(model, n_sphere)
+    cache = _init_fibonacci_and_sph(model, n_sphere)
     _build_cache_from_Y_matrix(model, cache, cache.Yₗₘ)
 end
 

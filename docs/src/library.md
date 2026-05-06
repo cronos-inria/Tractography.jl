@@ -118,3 +118,15 @@ Tractography.spherical_to_euclidean
 ```@docs
 Tractography.euclidean_to_spherical
 ```
+
+```@docs
+Tractography.softplus
+```
+
+```@docs
+Tractography.orientation_probabilities
+```
+
+```@docs
+Tractography.next_orientation
+```

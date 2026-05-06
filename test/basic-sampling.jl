@@ -1,73 +1,85 @@
 using Test, Tractography, LinearAlgebra, Accessors
+const TG = Tractography
 
-Tractography.PlottingFOD()
-Tractography.PreComputeAllFOD()
-Tractography.DirectFOD()
+let
+    TG.PlottingFOD()
+    TG.PreComputeAllFOD()
+    TG.DirectFOD()
+    
+    TG.softplus(0, 1)
+    TG.∂softplus(0, 1)
+    
+    TG.spherical_to_euclidean(0,0)
+    @test all(TG.euclidean_to_spherical(TG.spherical_to_euclidean(0.1, -0.01)...) .≈ [0.1, -0.01])
+    @test all(TG.euclidean_to_spherical(TG.spherical_to_euclidean(0.1, 3pi/2)...) .≈ [0.1, -pi/2])
+    @test all(TG.euclidean_to_spherical(TG.spherical_to_euclidean(0.1, -pi/2)...) .≈ [0.1, -pi/2])
+    u0 = normalize(rand(3))
+    @test all([TG.spherical_to_euclidean(TG.euclidean_to_spherical(u0...)...)...] .≈ u0)
+    
+    
+    p0 = normalize(rand(3))
+    v0 = normalize(rand(3)); v0 .-= dot(p0,v0) .* p0
+    @test dot(v0, p0) ≈ 0 atol = 1e-14
+    u = TG.Exp𝕊²(p0, v0, 0.2)
+    @test norm(u) ≈ 1
+end
 
-Tractography.softplus(0, 1)
-Tractography.∂softplus(0, 1)
+for eval_alg in (TG.PreComputeAllFOD(),)
+    model = TG.Model(Δt = 0.125f0,
+                foddata = TG.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
+                cone = TG.Cone(15),
+                proba_min = 0.005f0,
+                evaluation_algo = eval_alg,
+                )
 
-Tractography.spherical_to_euclidean(0,0)
-@test all(Tractography.euclidean_to_spherical(Tractography.spherical_to_euclidean(0.1, -0.01)...) .≈ [0.1, -0.01])
-@test all(Tractography.euclidean_to_spherical(Tractography.spherical_to_euclidean(0.1, 3pi/2)...) .≈ [0.1, -pi/2])
-@test all(Tractography.euclidean_to_spherical(Tractography.spherical_to_euclidean(0.1, -pi/2)...) .≈ [0.1, -pi/2])
-u0 = normalize(rand(3))
-@test all([Tractography.spherical_to_euclidean(Tractography.euclidean_to_spherical(u0...)...)...] .≈ u0)
+    TG._apply_mask!(model, ones(Float32, 64, 64, 3))
 
+    show(stdout, model)
 
-p0 = normalize(rand(3))
-v0 = normalize(rand(3)); v0 .-= dot(p0,v0) .* p0
-@test dot(v0, p0) ≈ 0 atol = 1e-14
-u = Tractography.Exp𝕊²(p0, v0, 0.2)
-@test norm(u) ≈ 1
+    TG.sample(model, TG.Deterministic(), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
+    TG.sample(model, TG.Connectivity(TG.Deterministic()), rand(Float32, 6, 2); nt = 10, maxfod_start = true);
+    TG.sample(model, TG.Probabilistic(), rand(Float32, 6, 2); nt = 10);
+    TG.sample(model, TG.Connectivity(TG.Probabilistic()), rand(Float32, 6, 2); nt = 10);
+end
 
-model = Tractography.Model(Δt = 0.125f0,
-            foddata = Tractography.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
-            cone = Tractography.Cone(15),
-            proba_min = 0.005f0,
-            )
-
-Tractography._apply_mask!(model, ones(Float32, 64, 64, 3))
-
-show(stdout, model)
-
-Tractography.sample(model, Tractography.Deterministic(), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
-Tractography.sample(model, Tractography.Connectivity(Tractography.Deterministic()), rand(Float32, 6, 2); nt = 10, maxfod_start = true);
-Tractography.sample(model, Tractography.Probabilistic(), rand(Float32, 6, 2); nt = 10);
-Tractography.sample(model, Tractography.Connectivity(Tractography.Probabilistic()), rand(Float32, 6, 2); nt = 10);
-
-for eval_alg in (Tractography.DirectFOD(), Tractography.PreComputeAllFOD())
-    model_diffusion = Tractography.Model(Δt = 0.001f0,
-                foddata = Tractography.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
+for eval_alg in (TG.DirectFOD(), TG.PreComputeAllFOD())
+    model_diffusion = TG.Model(Δt = 0.001f0,
+                foddata = TG.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
                 proba_min = 0.0f0,
                 evaluation_algo = eval_alg,
                 )
-    Tractography.sample(model_diffusion, Tractography.Transport(), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
-    Tractography.sample(model_diffusion, Tractography.Diffusion(), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
-    Tractography.sample(model_diffusion, Tractography.Connectivity(Tractography.Diffusion()), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
-    Tractography.sample(model, Tractography.Diffusion(adaptive = false), rand(Float32, 6, 2); nt = 10);
+    TG.sample(model_diffusion, TG.Transport(), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
+    TG.sample(model_diffusion, TG.Diffusion(), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
+    TG.sample(model_diffusion, TG.Connectivity(TG.Diffusion()), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
+    TG.sample(model_diffusion, TG.Diffusion(adaptive = false), rand(Float32, 6, 2); nt = 10);
 
     # cache diffusion
-    show(Tractography.Diffusion())
-    show(Tractography.Transport())
-    cache = Tractography.init(model_diffusion, Tractography.Diffusion())
-    cache = Tractography.init((@set model_diffusion.evaluation_algo = Tractography.PreComputeAllFOD()), Tractography.Diffusion())
-    Tractography.Exp𝕊²(rand(3), zeros(3), 1)
+    show(TG.Diffusion())
+    show(TG.Transport())
+    cache = TG.init(model_diffusion, TG.Diffusion())
+    cache = TG.init((@set model_diffusion.evaluation_algo = TG.PreComputeAllFOD()), TG.Diffusion())
+    TG.Exp𝕊²(rand(3), zeros(3), 1)
 end
 ########################
 # cache
-Nmc = 10
-seeds = rand(Float32, 6, Nmc)
-streamlines = zeros(Float32, 6, 20, Nmc)
-tract_length = zeros(UInt32, Nmc)
-alg = Probabilistic()
-cache = Tractography.init(model, alg)
-Tractography.get_angles(cache, 1)
-show(stdout, cache)
-cache = Tractography._init(model, alg, Tractography.get_basis(model))
-show(stdout, cache)
-cache = Tractography.init(model, Tractography.Diffusion())
-show(stdout, cache)
-
-Tractography._init((@set model.evaluation_algo = Tractography.PlottingFOD()), Tractography.Deterministic(), Tractography.get_basis(model))
-
+let
+    model = TG.Model(Δt = 0.125f0,
+    foddata = TG.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
+    cone = TG.Cone(15),
+    proba_min = 0.005f0,
+    )
+    Nmc = 10
+    seeds = rand(Float32, 6, Nmc)
+    streamlines = zeros(Float32, 6, 20, Nmc)
+    tract_length = zeros(UInt32, Nmc)
+    alg = Probabilistic()
+    cache = TG.init(model, alg)
+    TG.get_angles(cache, 1)
+    show(stdout, cache)
+    cache = TG._init(model, alg, TG.get_basis(model))
+    show(stdout, cache)
+    cache = TG.init(model, TG.Diffusion())
+    show(stdout, cache)
+    
+    TG._init((@set model.evaluation_algo = TG.PlottingFOD()), TG.Deterministic(), TG.get_basis(model))
+end

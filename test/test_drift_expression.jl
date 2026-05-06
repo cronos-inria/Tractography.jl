@@ -49,45 +49,45 @@ function euler_intrinsic(dt, t0, p0, ε, N)
 end
 
 let
-𝒯 = Float64
-_t0 = pi/3.3; _p0 = pi*0.89
-_eps0 = 0.3
-_fod, _mask = make_vector_field((2,2,2); ϵ = 𝒯(_eps0), Ty = 𝒯);
+    𝒯 = Float64
+    _t0 = pi/3.3; _p0 = pi*0.89
+    _eps0 = 0.3
+    _fod, _mask = make_vector_field((2,2,2); ϵ = 𝒯(_eps0), Ty = 𝒯);
 
-seeds = zeros(𝒯, 6, 3)
-for i in axes(seeds, 2)
-    seeds[:,i] .= vcat(10, 10, 10, TG.spherical_to_euclidean(_t0,_p0)...)
-end
+    seeds = zeros(𝒯, 6, 3)
+    for i in axes(seeds, 2)
+        seeds[:,i] .= vcat(10, 10, 10, TG.spherical_to_euclidean(_t0,_p0)...)
+    end
 
-model_d = TG.Model(Δt = 𝒯(0.00025),
-                foddata = TG.FODData(_fod, Array{𝒯}(1000*I(4)), zeros(4), false), # we put an enormous voxel size
-                proba_min = 𝒯(0.0),
-                evaluation_algo = TG.DirectFOD()
-            )
+    model_d = TG.Model(Δt = 𝒯(0.00025),
+                    foddata = TG.FODData(_fod, Array{𝒯}(1000*I(4)), zeros(4), false), # we put an enormous voxel size
+                    proba_min = 𝒯(0.0),
+                    evaluation_algo = TG.DirectFOD()
+                )
 
-nt = 60000
-streamlines_transport, tract_length = @time TG.sample(model_d, TG.Transport(;γ = 𝒯(1) ), 𝒯.(seeds); nt, maxfod_start = false);
+    nt = 60000
+    streamlines_transport, tract_length = @time TG.sample(model_d, TG.Transport(;γ = 𝒯(1) ), 𝒯.(seeds); nt, maxfod_start = false);
 
-@test norm(diff(streamlines_transport[1, 1:end-1, 1])./model_d.Δt - 
-        map(x->x[1], euler_intrinsic(model_d.Δt, _t0, _p0, _eps0, nt))[1:end-2], Inf) < model_d.Δt/2
+    @test norm(diff(streamlines_transport[1, 1:end-1, 1])./model_d.Δt - 
+            map(x->x[1], euler_intrinsic(model_d.Δt, _t0, _p0, _eps0, nt))[1:end-2], Inf) < model_d.Δt/2
 
-@test norm(diff(streamlines_transport[2, 1:end-1, 1])./model_d.Δt - 
-        map(x->x[2], euler_intrinsic(model_d.Δt, _t0, _p0, _eps0, nt))[1:end-2], Inf) < model_d.Δt/2
+    @test norm(diff(streamlines_transport[2, 1:end-1, 1])./model_d.Δt - 
+            map(x->x[2], euler_intrinsic(model_d.Δt, _t0, _p0, _eps0, nt))[1:end-2], Inf) < model_d.Δt/2
 
-# case close to the north pole
-_t0 = 0.0; _p0 = pi*0.89
-_eps0 = 0.3
-_fod, _mask = make_vector_field((2,2,2); ϵ = 𝒯(_eps0), Ty = 𝒯);
+    # case close to the north pole
+    _t0 = 0.0; _p0 = pi*0.89
+    _eps0 = 0.3
+    _fod, _mask = make_vector_field((2,2,2); ϵ = 𝒯(_eps0), Ty = 𝒯);
 
-for i in axes(seeds, 2)
-    seeds[:, i] .= vcat(10, 10, 10, TG.spherical_to_euclidean(_t0,_p0)...)
-end
+    for i in axes(seeds, 2)
+        seeds[:, i] .= vcat(10, 10, 10, TG.spherical_to_euclidean(_t0,_p0)...)
+    end
 
-streamlines_transport, tract_length = @time TG.sample(model_d, TG.Transport(;γ = 𝒯(1) ), 𝒯.(seeds); nt, maxfod_start = false);
+    streamlines_transport, tract_length = @time TG.sample(model_d, TG.Transport(;γ = 𝒯(1) ), 𝒯.(seeds); nt, maxfod_start = false);
 
-@test norm(diff(streamlines_transport[1, 1:end-1, 1])./model_d.Δt - 
-        map(x->x[1], euler_intrinsic(model_d.Δt, _t0, _p0, _eps0, nt))[1:end-2], Inf) < model_d.Δt
+    @test norm(diff(streamlines_transport[1, 1:end-1, 1])./model_d.Δt - 
+            map(x->x[1], euler_intrinsic(model_d.Δt, _t0, _p0, _eps0, nt))[1:end-2], Inf) < model_d.Δt
 
-@test norm(diff(streamlines_transport[2, 1:end-1, 1])./model_d.Δt - 
-        map(x->x[2], euler_intrinsic(model_d.Δt, _t0, _p0, _eps0, nt))[1:end-2], Inf) < model_d.Δt
+    @test norm(diff(streamlines_transport[2, 1:end-1, 1])./model_d.Δt - 
+            map(x->x[2], euler_intrinsic(model_d.Δt, _t0, _p0, _eps0, nt))[1:end-2], Inf) < model_d.Δt
 end

@@ -1,7 +1,7 @@
 # we solve ∂ₜ u = ∇ log f(u) for u ∈ S²
 # for f(u) = 1 + ϵ u₃⋅u₁
 using Test
-using  Tractography, StaticArrays, LinearAlgebra
+using Tractography, StaticArrays, LinearAlgebra
 const TG = Tractography
 
 function make_vector_field(shape=(30, 30, 3); n_coefficients = 45, Ty = Float64, ϵ = convert(Ty, 0.1))

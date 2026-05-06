@@ -33,7 +33,7 @@ struct PreComputeAllFOD <: AbstractFODEvaluation end
 ####################################################################################################
 # streamlines tracking algorithms
 abstract type AbstractSampler end
-# sampler that are based on a grid. Basically everything except ::Rejection
+# sampler that are based on a grid. Basically everything except Rejection sampling
 abstract type AbstractNotPureRejectionSampler <: AbstractSampler end
 # Deterministic samplers
 abstract type DeterministicSampler <: AbstractNotPureRejectionSampler end

@@ -1,8 +1,13 @@
-function _init_fibonacci_sh(model::Model{𝒯}, n_sphere) where {𝒯}
-    lmax = get_lmax(model)
+function _init_fibonacci(model::Model{𝒯}, n_sphere) where {𝒯}
     angles = fibonacci_sampling(n_sphere, 𝒯)
     directions = [spherical_to_euclidean(d[1], d[2]) for d in angles]
+    (;angles, directions)
+end
+
+function _init_fibonacci_sh(model::Model{𝒯}, n_sphere) where {𝒯}
+    (;angles, directions) = _init_fibonacci(model, n_sphere)
     n_angles = length(angles)
+    lmax = get_lmax(model)
     Yₗₘ = get_vector_of_sh(angles, lmax)
     cone = isnothing(model.cone) ? nothing : [𝒯(model.cone(d1, d2)) for d1 in directions, d2 in directions]
     ModelCache(; n_sphere = n_angles, Yₗₘ, dΩ = 𝒯(4pi / n_angles), angles, lmax, cone, directions)
@@ -26,7 +31,7 @@ end
 
 function _build_cache_from_Y_matrix(model::Model{𝒯}, cache, Ysv) where {𝒯}
     na = size(Ysv, 1)
-    # compute all ODF
+    # compute all FOD
     nx, ny, nz, nt = size(model)
     # we optimize the array layout because loops occurs on the angle variable
     # and julia is column major

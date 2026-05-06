@@ -14,6 +14,32 @@ See https://github.com/JuliaManifolds/ManifoldsBase.jl/blob/5c4a61ed3e5e44755a22
     return c .* p .+ (s / n) .* X
 end
 ####################################################################################################
+function init(model::Model{𝒯},
+                alg::Union{Talg, Connectivity{ Talg}};
+                n_sphere = 400,
+                𝒯ₐ = Array{𝒯},
+                ) where {𝒯, Talg <: AbstractSDESampler}
+    cache_cpu = _init(model, _get_alg(alg), get_basis(model); n_sphere)
+    # do not copy the array if the types are the same
+    _is_on_cpu = cache_cpu.odf isa 𝒯ₐ
+    ∫odf = sum(cache_cpu.odf, dims = 1)[1, :, :, :]
+    # here, we have to be careful because the mollifier attributes non zero probabilities
+    foddata_raw = _get_array(model.foddata.data)
+    map!(x -> x > 0 ? x : zero(x), ∫odf, @views foddata_raw[:,:,:,1])
+
+    ThreadedCache(
+            _is_on_cpu ? cache_cpu.odf   : 𝒯ₐ(cache_cpu.odf),
+            _is_on_cpu ? cache_cpu.∂θodf : 𝒯ₐ(cache_cpu.∂θodf),
+            _is_on_cpu ? cache_cpu.∂ϕodf : 𝒯ₐ(cache_cpu.∂ϕodf),
+            _is_on_cpu ? cache_cpu.cone  : 𝒯ₐ(cache_cpu.cone),
+            𝒯ₐ(mapreduce(x->[x[1] x[2] x[3]], vcat, cache_cpu.directions)),
+            𝒯ₐ(mapreduce(x->[x[1] x[2]],      vcat, cache_cpu.angles)),
+            _is_on_cpu ? ∫odf : 𝒯ₐ(∫odf),
+            cache_cpu.dΩ
+    )
+end
+
+# in this mode, we do not precompute the FOD, we evaluate them on the fly
 function init(model::Model{𝒯, DirectFOD},
                 alg::Union{Talg, Connectivity{ Talg}};
                 𝒯ₐ = Array{𝒯},
@@ -84,31 +110,6 @@ function _init(model::Model{𝒯, PreComputeAllFOD},
     @reset cache.∂θYₗₘ = ∂θYₗₘ
     @reset cache.∂ϕYₗₘ = ∂ϕYₗₘ
     return cache
-end
-
-function init(model::Model{𝒯},
-                alg::Union{Talg, Connectivity{ Talg}};
-                n_sphere = 400,
-                𝒯ₐ = Array{𝒯},
-                ) where {𝒯, Talg <: AbstractSDESampler}
-    cache_cpu = _init(model, _get_alg(alg), get_basis(model); n_sphere)
-    # do not copy the array if the types are the same
-    _is_on_cpu = cache_cpu.odf isa 𝒯ₐ
-    ∫odf = sum(cache_cpu.odf, dims = 1)[1, :, :, :]
-    # here, we have to be careful because the mollifier attributes non zero probabilities
-    foddata_raw = _get_array(model.foddata.data)
-    map!(x -> x > 0 ? x : zero(x), ∫odf, @views foddata_raw[:,:,:,1])
-
-    ThreadedCache(
-            _is_on_cpu ? cache_cpu.odf   : 𝒯ₐ(cache_cpu.odf),
-            _is_on_cpu ? cache_cpu.∂θodf : 𝒯ₐ(cache_cpu.∂θodf),
-            _is_on_cpu ? cache_cpu.∂ϕodf : 𝒯ₐ(cache_cpu.∂ϕodf),
-            _is_on_cpu ? cache_cpu.cone  : 𝒯ₐ(cache_cpu.cone),
-            𝒯ₐ(mapreduce(x->[x[1] x[2] x[3]], vcat, cache_cpu.directions)),
-            𝒯ₐ(mapreduce(x->[x[1] x[2]],      vcat, cache_cpu.angles)),
-            _is_on_cpu ? ∫odf : 𝒯ₐ(∫odf),
-            cache_cpu.dΩ
-    )
 end
 ####################################################################################################
 function sample!(streamlines,
@@ -182,7 +183,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                             @Const( fodf::AbstractArray{𝒯, 4}),
                             @Const(∂θodf::AbstractArray{𝒯, 4}),
                             @Const(∂ϕodf::AbstractArray{𝒯, 4}),
-                            @Const(∫odf::AbstractArray{𝒯, 3}),
+                            @Const( ∫odf::AbstractArray{𝒯, 3}),
                             @Const(directions::AbstractMatrix{𝒯}),
                             @Const(transform),
                             @Const(nₜ::UInt32),
@@ -195,10 +196,10 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                             @Const(γn::𝒯),
                             @Const(dΩ),
                             nx, ny, nz,
-                            ::Val{precomputed_odf},
+                            ::Val{precomputed_fod},
                             ::Val{save_full_streamline},
                             is_adaptive::Val{is_adaptive_type}
-                            ) where {𝒯, save_full_streamline, precomputed_odf, is_adaptive_type}
+                            ) where {𝒯, save_full_streamline, precomputed_fod, is_adaptive_type}
     # index of the streamline being computed
     nₙₘ = @index(Global)
 
@@ -217,7 +218,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     voxel_index₁ = voxel_index₂ = voxel_index₃ = Int32(0)
 
     (;ind_u, u₁, u₂, u₃, voxel_index₁, voxel_index₂, voxel_index₃) = _init_streamline(
-                                    maxfod_start, reverse_direction, precomputed_odf,
+                                    maxfod_start, reverse_direction, precomputed_fod,
                                     transform, fodf, directions, n_angles,
                                     x₁, x₂, x₃, u₁, u₂, u₃)
 
@@ -245,15 +246,13 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
         t_length += continue_tracking
 
         if continue_tracking
-            if precomputed_odf # static, removed at compilation
+            if precomputed_fod # static, removed at compilation
                 ind_u = _device_get_angle(directions, u₁, u₂, u₃, n_angles)
-                # !! Careful here, we need to have a probability: F / ∫F
                 F   =  fodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
                 Fθ  = ∂θodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
                 Fϕn = ∂ϕodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
                 ∫F  =  ∫odf[voxel_index₁, voxel_index₂, voxel_index₃]
-                st, ct = sincos(θᵢ)
-                sp, cp = sincos(ϕᵢ)
+                st = sin(θᵢ)
                 Fϕn /= st
             else
                 F, Fϕn, Fθ = ishtmtx_dot_divst(ϕᵢ, θᵢ, @view fodf[:, voxel_index₁, voxel_index₂, voxel_index₃])

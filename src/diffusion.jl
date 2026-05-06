@@ -152,11 +152,7 @@ function sample!(streamlines,
                             _alg,
                             _basis,
                             seeds,
-                            cache.odf,
-                            cache.∂θodf,
-                            cache.∂ϕodf,
-                            cache.∫odf,
-                            cache.directions,
+                            cache,
                             model.foddata.transform,
                             UInt32(nₜ),
                             maxfod_start,
@@ -183,12 +179,8 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                             alg::AbstractSDESampler{𝒯}, # needed for Transport vs Diffusion
                             @Const(basis::Abstract_fODFBasis),
                             @Const(seeds::AbstractMatrix{𝒯}),
-                            @Const( fodf::AbstractArray{𝒯, 4}),
-                            @Const(∂θodf::AbstractArray{𝒯, 4}),
-                            @Const(∂ϕodf::AbstractArray{𝒯, 4}),
-                            @Const( ∫odf::AbstractArray{𝒯, 3}),
-                            @Const(directions::AbstractMatrix{𝒯}),
-                            @Const(transform),
+                            @Const(cache::ThreadedCache),
+                            @Const(transform), #sert a quoi?
                             @Const(nₜ::UInt32),
                             @Const(maxfod_start::Bool),
                             @Const(reverse_direction::Bool),
@@ -209,7 +201,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     x₁ = seeds[1, nₙₘ]; x₂ = seeds[2, nₙₘ]; x₃ = seeds[3, nₙₘ]
     u₁ = seeds[4, nₙₘ]; u₂ = seeds[5, nₙₘ]; u₃ = seeds[6, nₙₘ]
 
-    n_angles::UInt32 = size(directions, 1)
+    n_angles::UInt32 = size(cache.directions, 1)
 
     # current index of angle
     ind_u::Int32 = 1
@@ -222,7 +214,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
 
     (;ind_u, u₁, u₂, u₃, voxel_index₁, voxel_index₂, voxel_index₃) = _init_streamline(
                                     maxfod_start, reverse_direction, precomputed_fod,
-                                    transform, fodf, directions, n_angles,
+                                    transform, cache.odf, cache.directions, n_angles,
                                     x₁, x₂, x₃, u₁, u₂, u₃)
 
     streamlines[1, 1, nₙₘ] = x₁
@@ -250,20 +242,20 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
 
         if continue_tracking
             if precomputed_fod # static, removed at compilation
-                ind_u = _device_get_angle(directions, u₁, u₂, u₃, n_angles)
-                F   =  fodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
-                Fθ  = ∂θodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
-                Fϕn = ∂ϕodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
-                ∫F  =  ∫odf[voxel_index₁, voxel_index₂, voxel_index₃]
+                ∫F  =  cache.∫odf[voxel_index₁, voxel_index₂, voxel_index₃]
+                ind_u = _device_get_angle(cache.directions, u₁, u₂, u₃, n_angles)
+                F   =   cache.odf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
+                Fθ  = cache.∂θodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
+                Fϕn = cache.∂ϕodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
                 st = sin(θᵢ)
                 Fϕn /= st
             else
-                F, Fϕn, Fθ = ishtmtx_dot_divst(ϕᵢ, θᵢ, @view fodf[:, voxel_index₁, voxel_index₂, voxel_index₃])
+                ∫F = cache.odf[1, voxel_index₁, voxel_index₂, voxel_index₃]
+                F, Fϕn, Fθ = evaluate_for_diffusion(basis, DirectFOD(), ϕᵢ, θᵢ, (voxel_index₁, voxel_index₂, voxel_index₃), cache)
                 ∂ = ∂softplus(F, 100f0)
                 F =  softplus(F, 100f0)
                 Fθ *= ∂
                 Fϕn *= ∂
-                ∫F = fodf[1, voxel_index₁, voxel_index₂, voxel_index₃]
             end
             continue_tracking = ∫F > proba_min # recall ∫F ∈ [0, 1]
         end
@@ -317,5 +309,6 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
         end
     end
 end
+
 @inline get_time_step(alg, dt, drift, F) = dt
-@inline get_time_step(alg::Val{true}, dt, drift, F) = dt * 2 / min(max(1, norm(drift)/F)^2, 10)
+@inline get_time_step(alg::Val{true}, dt, drift, F) = dt * 2 / min(max(one(dt), sum(abs2, drift) / (F * F)), 10 * one(dt))

@@ -17,6 +17,8 @@ module Tractography
     # plotting
     export plot_streamlines!, plot_fod, plot_fod!
 
+    import Adapt
+
     include("plot.jl")
     include("models.jl")
     include("seeds.jl")

@@ -1,7 +1,7 @@
 # GPU example
 
 This page shows a GPU workflow for tractography.
-The implementation is backend-agnostic (CUDA, Metal), but the main example below uses CUDA.
+The implementation is backend-agnostic (CUDA, Metal, ...).
 
 To maximize throughput, we use `Float32`.
 
@@ -25,7 +25,7 @@ model = Model(Δt = 0.125f0,
 ```julia
 using CUDA
 # number of streamlines
-Nmc = 1024*400
+Nmc = 1024 * 400
 # maximum number of steps for each streamline
 Nt = 2000
 # define the seeds
@@ -40,7 +40,7 @@ tract_length = CuArray(zeros(UInt32, Nmc))
     using Metal
     cu = MtlArray{Float32}
     # number of streamlines
-    Nmc = 1024*400
+    Nmc = 1024 * 400
     # maximum number of steps for each streamline
     Nt = 2000
     # define the seeds

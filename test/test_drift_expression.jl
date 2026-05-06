@@ -48,6 +48,7 @@ function euler_intrinsic(dt, t0, p0, ε, N)
     sol
 end
 
+let
 𝒯 = Float64
 _t0 = pi/3.3; _p0 = pi*0.89
 _eps0 = 0.3
@@ -89,4 +90,4 @@ streamlines_transport, tract_length = @time TG.sample(model_d, TG.Transport(;γ 
 
 @test norm(diff(streamlines_transport[2, 1:end-1, 1])./model_d.Δt - 
         map(x->x[2], euler_intrinsic(model_d.Δt, _t0, _p0, _eps0, nt))[1:end-2], Inf) < model_d.Δt
-
+end

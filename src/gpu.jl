@@ -254,6 +254,7 @@ KA.@kernel inbounds=true function _sample_kernel!(
     end # for-loop
     streamlines_length[nₙₘ] = t_length
 end
+
 @inline function orientation_probabilities(alg,
                                           fodf::AbstractArray{𝒯, 4},
                                           cone::AbstractMatrix{𝒯},

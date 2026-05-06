@@ -14,7 +14,7 @@ The `basis` is passed to the `FODData`. The evolution strategy is passed to the 
 
 # Basis for expressing fODF
 
-## Basis of spherical harmonics (SPH)
+## 1. Basis of spherical harmonics (SPH)
 
 This case corresponds to `basis = SphericalHarmonics()` which is the default. The set of fODFs can be passed in two ways. 
 

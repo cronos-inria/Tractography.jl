@@ -30,7 +30,7 @@ makedocs(
                 "gpu.md",
         ],
         "fODF specification" => "fodf.md",
-        "Algorithms" => "algos.md",
+        "Tractography algorithms" => "algos.md",
         "Functionalities" => [
                 "plot.md",
                 "connectivity.md",

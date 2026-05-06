@@ -81,6 +81,9 @@ struct ThreadedCache{𝒯a, 𝒯c, 𝒯ai, 𝒯ang, 𝒯, 𝒯s} <: AbstractCach
     dΩ::𝒯
 end
 
+# this allows to pass Cache to GPU kernels
+Adapt.@adapt_structure ThreadedCache
+
 function Base.show(io::IO, cache::ThreadedCache{𝒯a}) where {𝒯a}
     printstyled(io, "ThreadedCache (subset)"; bold = true, color = :cyan)
     printstyled(io, "\n ├─ size : $(round(Base.summarysize(cache)/1024^3, digits=3)) GiB\n"; bold = true)

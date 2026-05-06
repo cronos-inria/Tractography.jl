@@ -26,6 +26,7 @@ module Tractography
     include("utils.jl")
     include("modelcache.jl")
     include("sph.jl")
+    include("dti.jl")
     include("sample.jl")
     include("gpu.jl")
     include("diffusion.jl")

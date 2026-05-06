@@ -30,7 +30,25 @@ foddata = TG.FODData("fods.nii.gz", false)
 
 ### Provided by an `Array`
 
-You can also pass directly the SPH coefficients as an array to the constructor of [`Tractography.FODData`](@ref). Here is a simple dummy example
+You can also pass directly the SPH coefficients as an array of size `(nx, nx, nz, 6)` to the constructor of [`Tractography.FODData`](@ref). The matrix layout is
+
+```julia
+[v_tensor[1] v_tensor[4] v_tensor[5];
+ v_tensor[4] v_tensor[2] v_tensor[6];
+ v_tensor[5] v_tensor[6] v_tensor[3]] 
+```
+
+Here is a simple dummy example
+
+```julia
+import Tractography as TG
+
+foddata = TG.FODData(rand(10,10,10,6), false)
+```
+
+## 2. Basis of Diffusion Tensors (DTI)
+
+This case corresponds to `basis = DTI()`. You can pass the data using a file as for the `SphericalHarmonics` basis. You can also pass directly the coefficients as an array to the constructor of [`Tractography.FODData`](@ref). Here is a simple dummy example
 
 ```julia
 import Tractography as TG

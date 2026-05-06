@@ -151,6 +151,7 @@ function sample!(streamlines,
                             streamlines_length,
                             _alg,
                             _basis,
+                            model.evaluation_algo,
                             seeds,
                             cache,
                             model.foddata.transform,
@@ -178,6 +179,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                             streamlines_length::AbstractArray{UInt32, 1},
                             alg::AbstractSDESampler{𝒯}, # needed for Transport vs Diffusion
                             @Const(basis::Abstract_fODFBasis),
+                            @Const(evaluation_algo::AbstractFODEvaluation),
                             @Const(seeds::AbstractMatrix{𝒯}),
                             @Const(cache::ThreadedCache),
                             @Const(transform), #sert a quoi?
@@ -222,7 +224,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     streamlines[3, 1, nₙₘ] = x₃
 
     conditioned_proba = zero(𝒯)
-    F = ∫F = Fθ = Fϕn = hx = ∂ = zero(𝒯)
+    F = ∫F = Fθ = Fϕn = hx = zero(𝒯)
     st = ct = sp = cp = zero(𝒯)
     θᵢ, ϕᵢ = euclidean_to_spherical(u₁, u₂, u₃)
     iₛₐᵥₑ::UInt32 = UInt32(2)
@@ -242,49 +244,17 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
 
         if continue_tracking
             if precomputed_fod # static, removed at compilation
-                ∫F  =  cache.∫odf[voxel_index₁, voxel_index₂, voxel_index₃]
                 ind_u = _device_get_angle(cache.directions, u₁, u₂, u₃, n_angles)
-                F   =   cache.odf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
-                Fθ  = cache.∂θodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
-                Fϕn = cache.∂ϕodf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]
-                st = sin(θᵢ)
-                Fϕn /= st
-            else
-                ∫F = cache.odf[1, voxel_index₁, voxel_index₂, voxel_index₃]
-                F, Fϕn, Fθ = evaluate_for_diffusion(basis, DirectFOD(), ϕᵢ, θᵢ, (voxel_index₁, voxel_index₂, voxel_index₃), cache)
-                ∂ = ∂softplus(F, 100f0)
-                F =  softplus(F, 100f0)
-                Fθ *= ∂
-                Fϕn *= ∂
             end
+            # Careful that ∂F∂θ = ∂(FODF)∂θ / sin(θ) to avoid division by zero
+            F, ∂F∂ϕ, ∂F∂θ, ∫F = evaluate_for_diffusion(basis, evaluation_algo, ϕᵢ, θᵢ, ind_u, (voxel_index₁, voxel_index₂, voxel_index₃), cache)
             continue_tracking = ∫F > proba_min # recall ∫F ∈ [0, 1]
         end
 
         if continue_tracking
-            st, ct = sincos(θᵢ)
-            sp, cp = sincos(ϕᵢ)
-            # tangent vectors in polar coordinates
-            # recall D = (st * cp, st * sp, ct), we have error ~ 1e-7
-
-            # local orthonormal basis
-            E₁ = SA.SVector(ct * cp, ct * sp, -st)
-            E₂ = SA.SVector(-sp, cp, 0)
-
-            # we call ishtmtx_dot_divst, so no need to divide Fϕn by st
-            drift = Fθ * E₁ + Fϕn * E₂
-
-            # 19-AAP1507
-            hx = get_time_step(is_adaptive, dt, drift, F)
-
-            if alg isa Transport
-                tangent = (γ * hx / F) * drift
-            else
-                noise = randn(𝒯) * E₁ + randn(𝒯) * E₂
-                tangent = (γ * hx / F) * drift + sqrt(2γ * hx * γn) * noise
-            end
-
-            # Geometric-Euler scheme
-            u₁, u₂, u₃ = Exp𝕊²(D, tangent, one(𝒯)) # injectivity radius
+            # next direction and new time step (if adaptive)
+            (;D, hx) = __next_tangent(alg, D, θᵢ, ϕᵢ, dt, γ, γn, F, ∂F∂ϕ, ∂F∂θ, is_adaptive)
+            u₁, u₂, u₃ = D
             θᵢ, ϕᵢ = euclidean_to_spherical(u₁, u₂, u₃)
 
             x₁ += hx * u₁
@@ -312,3 +282,42 @@ end
 
 @inline get_time_step(alg, dt, drift, F) = dt
 @inline get_time_step(alg::Val{true}, dt, drift, F) = dt * 2 / min(max(one(dt), sum(abs2, drift) / (F * F)), 10 * one(dt))
+
+function __next_tangent(alg,
+                        D,
+                        θ::𝒯,
+                        ϕ::𝒯,
+                        dt::𝒯,
+                        γ,
+                        γn,
+                        F,
+                        ∂F∂ϕ,
+                        Fθ,
+                        is_adaptive) where {𝒯}
+    st, ct = sincos(θ)
+    sp, cp = sincos(ϕ)
+    # tangent vectors in polar coordinates
+    # recall D = (st * cp, st * sp, ct), we have error ~ 1e-7
+
+    # local orthonormal basis
+    E₁ = SA.SVector(ct * cp, ct * sp, -st) # E_theta
+    E₂ = SA.SVector(-sp, cp, 0)            # E_phi
+
+    # recall that ∇h = ∂h∂θ * E₁ + ∂h∂ϕ * E₂ / sin(θ)
+    # we call ishtmtx_dot_divst, so no need to divide ∂F∂ϕ by sin(θ)
+    drift = Fθ * E₁ + ∂F∂ϕ * E₂
+
+    # 19-AAP1507
+    hx = get_time_step(is_adaptive, dt, drift, F)
+
+    if alg isa Transport
+        tangent = (γ * hx / F) * drift
+    else
+        noise = randn(𝒯) * E₁ + randn(𝒯) * E₂
+        tangent = (γ * hx / F) * drift + sqrt(2γ * hx * γn) * noise
+    end
+
+    # Geometric-Euler scheme
+    return (;D = Exp𝕊²(D, tangent, one(𝒯)), # injectivity radius
+            hx)
+end

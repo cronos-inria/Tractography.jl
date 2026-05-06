@@ -1,7 +1,7 @@
 name = "Tractography"
 uuid = "df9aafbb-e545-4464-854d-5d08b36f846c"
 authors = ["Samuel Deslauriers-Gauthier <samuel.deslauriers-gauthier@inria.fr> and Romain Veltz <romain.veltz@inria.fr>"]
-version = "0.0.2"
+version = "0.0.3"
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"

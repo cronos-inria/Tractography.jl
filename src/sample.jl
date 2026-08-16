@@ -62,7 +62,7 @@ Sample the Model `model`.
 - `reverse_direction::Bool` reverse initial direction.
 - `nthreads::Int = 8` number of threads on CPU.
 - `gputhreads::Int = 512` number of threads on GPU.
-- `saveat::Int` record the streamline every `saveat` step. Only available for `alg <: Diffusion`.
+- `saveat::Int` record the streamline every `saveat` step. Only available for `alg <: AbstractSDESampler`.
 
 ## Output
 - `streamlines` with shape `3 x nt x Nmc`
@@ -82,7 +82,7 @@ function sample(model::Model{𝒯},
     if size(seeds, 1) != 6
         error("The seeds dimension must be 6 x n_seed")
     end
-    streamlines = similar(seeds, 3, (alg isa Connectivity ? 2 : div(nt, saveat)), size(seeds, 2))
+    streamlines = zeros(𝒯, 3, (alg isa Connectivity ? 2 : 1 + div(nt - 1, saveat)), size(seeds, 2))
     streamlines_length = zeros(UInt32, size(seeds, 2))
     cache = init(model, alg; n_sphere)
     if ~isnothing(mask)

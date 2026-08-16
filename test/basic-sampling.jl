@@ -61,6 +61,28 @@ for eval_alg in (TG.DirectFOD(), TG.PreComputeAllFOD())
     TG.Exp𝕊²(rand(3), zeros(3), 1)
 end
 ########################
+# saveat sampling
+let
+    for eval_alg in (TG.DirectFOD(), TG.PreComputeAllFOD())
+        model_diffusion = TG.Model(Δt = 0.001f0,
+                    foddata = TG.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
+                    proba_min = 0.0f0,
+                    evaluation_algo = eval_alg,
+                    )
+        seeds = TG.from_fod(model_diffusion, 4; maxfod_start = true)
+        for saveat in (1, 2, 5)
+            streamlines, tract_length = TG.sample(model_diffusion, TG.Transport(), seeds; nt = 21, saveat)
+            # a point is recorded each saveat-th movement, plus the seed
+            @test size(streamlines, 2) == 1 + div(21 - 1, saveat)
+            @test all(tract_length .<= size(streamlines, 2))
+        end
+        # nt not divisible by saveat
+        streamlines, tract_length = TG.sample(model_diffusion, TG.Transport(), seeds; nt = 11, saveat = 2)
+        @test size(streamlines, 2) == 1 + div(11 - 1, 2)
+        @test all(tract_length .<= size(streamlines, 2))
+    end
+end
+########################
 # cache
 let
     model = TG.Model(Δt = 0.125f0,

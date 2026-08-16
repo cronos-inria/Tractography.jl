@@ -141,7 +141,7 @@ function sample!(streamlines,
     @debug size(streamlines) nₜ Nmc nthreads gputhreads model.Δt alg
 
     _, nx, ny, nz = size(cache.odf)
-    streamlines_length .= nₜ ÷ saveat
+    streamlines_length .= 1 + (nₜ - 1) ÷ saveat
 
     # launch gpu kernel
     backend = KA.get_backend(seeds)
@@ -252,7 +252,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
             end
             # Careful that ∂F∂ϕ = ∂(FODF)∂ϕ / sin(θ) to avoid division by zero
             F, ∂F∂ϕ, ∂F∂θ, ∫F = evaluate_for_diffusion(basis, evaluation_algo, ϕᵢ, θᵢ, ind_u, (voxel_index₁, voxel_index₂, voxel_index₃), cache)
-            continue_tracking = ∫F > proba_min # recall ∫F ∈ [0, 1]
+            continue_tracking = (∫F > proba_min) && (F > proba_min) # recall ∫F ∈ [0, 1]
         end
 
         if continue_tracking
@@ -264,16 +264,10 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
             x₁ += hx * u₁
             x₂ += hx * u₂
             x₃ += hx * u₃
-        else
-            streamlines_length[nₙₘ] = t_length ÷ saveat
-            if save_full_streamline == false # static
-                streamlines[1, 2, nₙₘ] = x₁
-                streamlines[2, 2, nₙₘ] = x₂
-                streamlines[3, 2, nₙₘ] = x₃
-            end
         end
 
-        if mod(iₜ, saveat) == 0
+        # record one point every `saveat`-th movement (m = iₜ - 1)
+        if continue_tracking && mod(iₜ - 1, saveat) == 0
             if save_full_streamline # static
                 streamlines[1, iₛₐᵥₑ, nₙₘ] = x₁
                 streamlines[2, iₛₐᵥₑ, nₙₘ] = x₂
@@ -281,6 +275,14 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                 iₛₐᵥₑ += 1
             end
         end
+    end
+    if save_full_streamline == false # static
+        streamlines_length[nₙₘ] = t_length ÷ saveat
+        streamlines[1, 2, nₙₘ] = x₁
+        streamlines[2, 2, nₙₘ] = x₂
+        streamlines[3, 2, nₙₘ] = x₃
+    else
+        streamlines_length[nₙₘ] = iₛₐᵥₑ - 1
     end
 end
 

@@ -135,6 +135,9 @@ function sample!(streamlines,
     if ndims(streamlines) < 3
         error("streamlines must be passed as an 3 x nt x N array")
     end
+    if maxfod_start && ((model.evaluation_algo isa PreComputeAllFOD) == false)
+        @warn "The option `maxfod_start` cannot be taken into account because of the sampling strategy."
+    end
     @debug size(streamlines) nₜ Nmc nthreads gputhreads model.Δt alg
 
     _, nx, ny, nz = size(cache.odf)
@@ -282,7 +285,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
 end
 
 @inline get_time_step(alg, dt, drift, F) = dt
-@inline get_time_step(alg::Val{true}, dt, drift, F) = dt * 2 / min(max(one(dt), sum(abs2, drift) / (F * F)), 10 * one(dt))
+@inline get_time_step(::Val{true}, dt, drift, F) = dt * 2 / min(max(one(dt), sum(abs2, drift) / (F * F)), 10 * one(dt))
 
 function __next_tangent(alg,
                         D,

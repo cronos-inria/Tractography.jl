@@ -39,13 +39,19 @@ $(SIGNATURES)
 
 Plot the streamlines with lines colored by local orientation.
 
+# Arguments
+- `ax` scene or axis used for plotting.
+- `streamlines::AbstractArray{𝒯, 3}` streamlines with shape `3 x nt x Nmc`.
+- `stl_lengths` vector of length `Nmc`: for the streamline `nm`, only the points `1:stl_lengths[nm]` (indices along `nt`) are drawn. The bounds are expressed in the second dimension of the `streamlines` array that is passed: if you subsample this dimension (e.g. `streamlines[:, 1:s:end, :]`), pass adapted lengths `stl_lengths = 1 .+ (tract_length .- 1) .÷ s`.
+
 The optional parameters are passed to `lines!`.
 """
-@views function plot_streamlines!(ax, streamlines::AbstractArray{𝒯, 3}; k...) where {𝒯}
+@views function plot_streamlines!(ax, streamlines::AbstractArray{𝒯, 3}, stl_lengths; k...) where {𝒯}
     _colors = Makie.RGB{𝒯}[]
     _lines = Point{3, 𝒯}[]
     @time  "SL" for nm in axes(streamlines, 3)
         for i in axes(streamlines, 2)
+            (i > stl_lengths[nm]) && break
             push!(_lines, Point3(streamlines[1:3, i, nm]...))
             if i == 1
                 x, y, z = 0, 0, 0
@@ -82,6 +88,11 @@ The optional parameters are passed to `lines!`.
     return ax
 end
 ####################################################################################################
+"""
+$(SIGNATURES)
+
+Plot the the ODF with glyphs. See doc string of `plot_fod!`.
+"""
 function plot_fod(model::Model; k...)
     f = Figure(backgroundcolor = :black)
     lscene = LScene(f[1, 1], scenekw = (lights = [
@@ -97,19 +108,26 @@ end
 """
 $(SIGNATURES)
 
-Plot the the ODF with glyphs.
+Plot the fibre orientation distribution function (fODF) field as 3D glyphs.
+
+For each displayed voxel, the fODF is evaluated on `n_sphere` directions
+uniformly sampled on the sphere (Fibonacci sampling), made non-negative with
+the `model` mollifier, and drawn as a mesh whose radius at direction `u` is
+`mollifier(fodf(u)) * radius / c₀₀`. The glyphs are colored by orientation.
 
 ## See also
-- `plot_fod(model; kwargs...)` for an out-of-place method with same parameters.
+- `plot_fod(model; kwargs...)` for an out-of-place method with the same arguments.
 
 ## Arguments
-- `ax` GLMakie scene
+- `ax`: 3D scene to draw into (e.g. an `LScene` or `Axis3`).
 - `model::Model`
 
-## Optional arguments
-- `I, J, K`: range for displaying the fODFs. Some of them can be a single element, like `K = 40:40`.
-- `radius`: radius of the glyph.
-- `st = 4`: stride, only show one over `st` glyph in each direction.
+## Keyword arguments
+- `n_sphere = 10`: number of directions used to sample the sphere and discretize each glyph.
+- `radius = 0.1`: base radius of the glyphs.
+- `st = 4`: stride; only one voxel out of `st` is displayed along each axis, unless `I`, `J`, `K` are given.
+- `I = nothing, J = nothing, K = nothing`: ranges of voxels (along each axis) to display. A single voxel can be selected with a one-element range, e.g. `K = 40:40` to plot a plane. When `nothing`, the defaults `1:st:nx`, `1:st:ny`, `1:st:nz` are used.
+- `c0min = 0.1`: minimum value of the first fODF coefficient (`c₀₀`) for a voxel to be displayed; voxels with `c₀₀ ≤ c0min` are skipped.
 """
 function plot_fod!(ax, model::Model{𝒯} ; 
                     n_sphere = 10,

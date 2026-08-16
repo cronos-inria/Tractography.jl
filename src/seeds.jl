@@ -69,7 +69,7 @@ function from_mask(model::Model{𝒯}, mask::AbstractArray{Bool, 3}, n_seeds::In
     for i in axes(seeds, 2)
         index = rand(1:n_zeros)
         I = non_zeros[index]
-        position =  transform(tf, I)
+        position = transform(tf, I)
         for k = 1:3
             seeds[k, i] = position[k] + rand(𝒯) - 𝒯(1//2)
         end

@@ -62,7 +62,7 @@ println("Dimension of computed streamlines = ", size(streamlines))
 ```@example FCUP
 f, scene = @time TG.plot_fod(model; n_sphere = 500, radius = 0.3, st = 1);
 ind_st = findall(tract_length .> 60)
-TG.plot_streamlines!(scene, streamlines[:, :, ind_st[1:10:end]])
+TG.plot_streamlines!(scene, streamlines[:, :, ind_st[1:10:end]], tract_length[ind_st[1:10:end]])
 f
 ```
 

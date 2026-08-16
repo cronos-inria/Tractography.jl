@@ -56,7 +56,8 @@ end
 # Create a combined visualization of streamlines and FODFs
 f = Figure(backgroundcolor = :white)
 lscene = LScene(f[1, 1])
-TG.plot_streamlines!(lscene.scene, streamlines[1:3, 1:1:end, :])
+stl_lengths = fill(size(streamlines, 2), size(streamlines, 3))
+TG.plot_streamlines!(lscene.scene, streamlines[1:3, 1:1:end, :], stl_lengths)
 TG.plot_fod!(lscene, model; n_sphere = 1500, radius = 1.3, st = 4)
 f
 ```

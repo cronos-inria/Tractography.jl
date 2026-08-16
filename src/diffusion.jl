@@ -15,7 +15,7 @@ See https://github.com/JuliaManifolds/ManifoldsBase.jl/blob/5c4a61ed3e5e44755a22
 end
 ####################################################################################################
 function init(model::Model{𝒯},
-                alg::Union{Talg, Connectivity{ Talg}};
+                alg::Union{Talg, Endpoints{ Talg}};
                 n_sphere = 400,
                 𝒯ₐ = Array{𝒯},
                 ) where {𝒯, Talg <: AbstractSDESampler}
@@ -41,7 +41,7 @@ end
 
 # in this mode, we do not precompute the FOD, we evaluate them on the fly
 function init(model::Model{𝒯, DirectFOD},
-                alg::Union{Talg, Connectivity{ Talg}};
+                alg::Union{Talg, Endpoints{ Talg}};
                 𝒯ₐ = Array{𝒯},
                 n_sphere = 0) where {𝒯, Talg <: AbstractSDESampler}
     ni = 𝒯.(get_array(model))
@@ -116,7 +116,7 @@ function sample!(streamlines,
                 streamlines_length::AbstractArray{UInt32, 1},
                 model::Model{𝒯}, 
                 cache::AbstractCache, 
-                alg::Union{AbstractSDESampler, Connectivity{ <: AbstractSDESampler}},
+                alg::Union{AbstractSDESampler, Endpoints{ <: AbstractSDESampler}},
                 seeds::AbstractMatrix{𝒯};
                 maxfod_start::Bool = false,
                 reverse_direction::Bool = false,
@@ -169,7 +169,7 @@ function sample!(streamlines,
                             cache.dΩ,
                             nx, ny, nz,
                             Val(model.evaluation_algo isa PreComputeAllFOD),
-                            Val(~(alg isa Connectivity)),
+                            Val(~(alg isa Endpoints)),
                             Val(is_adaptive(alg))
                             ;
                             ndrange = Nmc

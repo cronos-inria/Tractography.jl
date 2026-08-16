@@ -37,9 +37,29 @@ for eval_alg in (TG.PreComputeAllFOD(),)
     show(stdout, model)
 
     TG.sample(model, TG.Deterministic(), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
-    TG.sample(model, TG.Connectivity(TG.Deterministic()), rand(Float32, 6, 2); nt = 10, maxfod_start = true);
+    TG.sample(model, TG.Endpoints(TG.Deterministic()), rand(Float32, 6, 2); nt = 10, maxfod_start = true);
     TG.sample(model, TG.Probabilistic(), rand(Float32, 6, 2); nt = 10);
-    TG.sample(model, TG.Connectivity(TG.Probabilistic()), rand(Float32, 6, 2); nt = 10);
+    TG.sample(model, TG.Endpoints(TG.Probabilistic()), rand(Float32, 6, 2); nt = 10);
+end
+
+########################
+# Endpoints returns the first/last point and a length
+let
+    model = TG.Model(Δt = 0.125f0,
+                foddata = TG.FODData((@__DIR__) * "/../examples/fod-FC.nii.gz"),
+                cone = TG.Cone(15),
+                proba_min = 0.005f0,
+                )
+    TG._apply_mask!(model, ones(Float32, 64, 64, 3))
+    for alg in (TG.Endpoints(TG.Deterministic()), TG.Endpoints(TG.Probabilistic()))
+        seeds = TG.from_fod(model, 8; n_sphere = 200)
+        streamlines, tract_length = TG.sample(model, alg, seeds; nt = 1000)
+        @test size(streamlines) == (3, 2, 8)
+        @test streamlines[:, 1, :] == seeds[1:3, :]
+        for k in 1:8
+            tract_length[k] > 1 && @test !all(iszero, streamlines[:, 2, k])
+        end
+    end
 end
 
 for eval_alg in (TG.DirectFOD(), TG.PreComputeAllFOD())
@@ -50,7 +70,8 @@ for eval_alg in (TG.DirectFOD(), TG.PreComputeAllFOD())
                 )
     TG.sample(model_diffusion, TG.Transport(), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
     TG.sample(model_diffusion, TG.Diffusion(), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
-    TG.sample(model_diffusion, TG.Connectivity(TG.Diffusion()), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
+    sl_end, = TG.sample(model_diffusion, TG.Endpoints(TG.Diffusion()), rand(Float32, 6, 2); nt = 10, maxfod_start = true, reverse_direction = true);
+    @test size(sl_end, 2) == 2
     TG.sample(model_diffusion, TG.Diffusion(adaptive = false), rand(Float32, 6, 2); nt = 10);
 
     # cache diffusion

@@ -10,8 +10,8 @@ module Tractography
 
     # sampling method of FODF
     export DirectFOD, PreComputeAllFOD
-    export Probabilistic, Deterministic, Diffusion, Connectivity
     export FODData, Model, Cone, sample, init
+    export Probabilistic, Deterministic, Diffusion, Endpoints
     export save_streamlines
 
     # plotting

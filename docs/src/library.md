@@ -62,7 +62,7 @@ Tractography.Transport
 ```
 
 ```@docs
-Tractography.Connectivity
+Tractography.Endpoints
 ```
 
 ## Sampling

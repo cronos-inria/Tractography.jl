@@ -34,7 +34,7 @@ makedocs(
         "Tractography algorithms" => "algos.md",
         "Functionalities" => [
                 "plot.md",
-                "connectivity.md",
+                "endpoints.md",
                 "seeds.md",
                 "export.md",
         ],

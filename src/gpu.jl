@@ -41,7 +41,7 @@ $(TYPEDSIGNATURES)
 Sample the `model` in place by overwriting `streamlines`. Uses minimal memory and can run indefinitely on GPU.
 
 # Arguments
-- `streamlines` array with shape `3 x nt x Nmc`. `nt` is the maximum length per streamline. `Nmc` is the number of Monte-Carlo simulations.
+- `streamlines` array with shape `3 x nt x Nmc`, where `nt` is the number of allocated columns (an upper bound on the number of stored points; the exact per-streamline count is written into `streamlines_length`). In `Endpoints` mode only the first and last points are stored, so allocate a second dimension of `2` and set the maximal number of integration steps via the keyword `nₜ`. `Nmc` is the number of Monte-Carlo simulations.
 - `streamlines_length` lengths of the streamlines.
 - `model::Model` model to sample from.
 - `alg` sampling algorithm: `Deterministic`, `Probabilistic`, `Diffusion`, etc.
@@ -149,7 +149,7 @@ function launch_kernel(nthreads = 8;
                             dΩ,
                             Δt,
                             nx, ny, nz,
-                            Val(~(alg isa Connectivity))
+                            Val(~(alg isa Endpoints))
                             ;
                             ndrange = Nmc
                             )
@@ -236,9 +236,6 @@ KA.@kernel inbounds=true function _sample_kernel!(
             else
                 # we stop tracking then
                 continue_tracking = false
-                if ~save_full_streamline
-                    streamlines[1, 2, nₙₘ] = x₁; streamlines[2, 2, nₙₘ] = x₂; streamlines[3, 2, nₙₘ] = x₃
-                end
             end
         end
 
@@ -251,6 +248,10 @@ KA.@kernel inbounds=true function _sample_kernel!(
             streamlines[1, iₜ, nₙₘ] = x₁; streamlines[2, iₜ, nₙₘ] = x₂; streamlines[3, iₜ, nₙₘ] = x₃
         end 
     end # for-loop
+    if save_full_streamline == false # static
+        # x is not updated anymore once tracking stopped: it holds the last point reached
+        streamlines[1, 2, nₙₘ] = x₁; streamlines[2, 2, nₙₘ] = x₂; streamlines[3, 2, nₙₘ] = x₃
+    end
     streamlines_length[nₙₘ] = t_length
 end
 

@@ -65,7 +65,8 @@ Sample the Model `model`.
 - `saveat::Int` record the streamline every `saveat` step. Only available for `alg <: AbstractSDESampler`.
 
 ## Output
-- `streamlines` with shape `3 x nt x Nmc`
+- `streamlines` with shape `3 x n_saved x Nmc`, where `n_saved = 1 + (nt - 1) ÷ saveat` points are stored per full streamline (`n_saved = nt` when `saveat = 1`). In `Endpoints` mode only the first and last points are returned, so the second dimension is `2`.
+- `streamlines_length` vector of length `Nmc` with the number of stored points of each streamline.
 """
 function sample(model::Model{𝒯},
                 alg::AbstractSampler,
@@ -82,7 +83,7 @@ function sample(model::Model{𝒯},
     if size(seeds, 1) != 6
         error("The seeds dimension must be 6 x n_seed")
     end
-    streamlines = zeros(𝒯, 3, (alg isa Connectivity ? 2 : 1 + div(nt - 1, saveat)), size(seeds, 2))
+    streamlines = zeros(𝒯, 3, (alg isa Endpoints ? 2 : 1 + div(nt - 1, saveat)), size(seeds, 2))
     streamlines_length = zeros(UInt32, size(seeds, 2))
     cache = init(model, alg; n_sphere)
     if ~isnothing(mask)

@@ -77,6 +77,6 @@ f
 When computing structural connectivity, we don't need to record the entire streamline but only its extremities.
 
 ```@example FCUP
-streamlines, tract_length = TG.sample(model, TG.Connectivity(TG.Deterministic()), seeds; nt = 1000);
+streamlines, tract_length = TG.sample(model, TG.Endpoints(TG.Deterministic()), seeds; nt = 1000);
 println("Dimension of computed streamlines = ", size(streamlines))
 ```

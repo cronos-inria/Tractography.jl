@@ -50,14 +50,14 @@ Do not return the full streamline but only the first/last points and the streaml
     This can be useful for tractography based sampling of structural connectivity. 
 
 ## Constructor example
- - `Connectivity(Probabilistic())`
+ - `Endpoints(Probabilistic())`
 """
-struct Connectivity{Talg} <: AbstractSampler
+struct Endpoints{Talg} <: AbstractSampler
     alg::Talg
 end
 
 _get_alg(alg) = alg
-_get_alg(alg::Connectivity) = alg.alg
+_get_alg(alg::Endpoints) = alg.alg
 
 """
 $(TYPEDEF)
@@ -113,11 +113,11 @@ If you want `Float64`, you have to pass the two scalars
 end
 
 get_γ(alg::AbstractSDESampler) = alg.γ
-get_γ(alg::Connectivity) = get_γ(_get_alg(alg))
+get_γ(alg::Endpoints) = get_γ(_get_alg(alg))
 get_γ_noise(alg::AbstractSDESampler) = alg.γ_noise
-get_γ_noise(alg::Connectivity) = get_γ_noise(_get_alg(alg))
+get_γ_noise(alg::Endpoints) = get_γ_noise(_get_alg(alg))
 is_adaptive(alg::AbstractSDESampler) = alg.adaptive
-is_adaptive(alg::Connectivity) = is_adaptive(_get_alg(alg))
+is_adaptive(alg::Endpoints) = is_adaptive(_get_alg(alg))
 
 """
 $(TYPEDSIGNATURES)

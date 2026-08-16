@@ -93,7 +93,7 @@ CUDA.@time TG.sample!(
     This can be called many times, for example after updating the seeds.
 
 
-`streamlines_gpu` stays on device memory. To inspect the result on CPU, copy or wrap depending on your backend.
+`streamlines_gpu` stays on device memory. To inspect the result on CPU, copy it back to the host:
 
 ```julia
 streamlines = @time unsafe_wrap(Array, streamlines_gpu);

@@ -15,7 +15,7 @@ using Pkg
 Pkg.add("PythonCall")
 ```
 
-Then install `nibabel` in Python (this typically happens automatically via `PythonCall`).
+Then make sure `nibabel` is available in the Python environment used by `PythonCall` (e.g. `pip install nibabel` in that environment, or `CondaPkg.add("nibabel")` from Julia).
 
 ### Basic Example
 

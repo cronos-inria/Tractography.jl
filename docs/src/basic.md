@@ -1,6 +1,6 @@
 # Simple example of tractography
 
-This is a more advanced tutorial because we want to show how to apply a mask.
+This minimal example defines a `Model` from a fibre orientation distribution (fODF) stored in a NIfTI file.
 
 ```@example BASIC
 import Tractography as TG

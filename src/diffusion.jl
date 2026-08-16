@@ -233,8 +233,9 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     # Karthik Bharath, Alexander Lewis, et al. Sampling and Estimation on Manifolds Using the Langevin Diffusion. n.d.
     # X_{n+1}^h =\exp_{X_n^h}(  h/2⋅∇ E(X_n^h) + √h ⋅ g^{-1/2}(X_n^h) ⋅ ξ_{n+1})
 
+    D = SA.SVector(u₁, u₂, u₃)
+
     for iₜ = UInt32(2):nₜ
-        D = SA.SVector(u₁, u₂, u₃)
         # x is in native space
         (voxel_index₁, voxel_index₂, voxel_index₃) = get_voxel_index(transform, (x₁, x₂, x₃))
 
@@ -262,7 +263,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
             x₃ += hx * u₃
         else
             streamlines_length[nₙₘ] = t_length ÷ saveat
-            if save_full_streamline == false
+            if save_full_streamline == false # static
                 streamlines[1, 2, nₙₘ] = x₁
                 streamlines[2, 2, nₙₘ] = x₂
                 streamlines[3, 2, nₙₘ] = x₃
@@ -270,7 +271,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
         end
 
         if mod(iₜ, saveat) == 0
-            if save_full_streamline
+            if save_full_streamline # static
                 streamlines[1, iₛₐᵥₑ, nₙₘ] = x₁
                 streamlines[2, iₛₐᵥₑ, nₙₘ] = x₂
                 streamlines[3, iₛₐᵥₑ, nₙₘ] = x₃

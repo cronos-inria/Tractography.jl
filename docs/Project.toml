@@ -1,9 +1,11 @@
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+DocumenterCodeBlocks = "b6400b83-267f-4b55-9fd8-bffc853bdfd8"
 NIfTI = "a3a9e032-41b5-5fc4-967a-a6b7a19844d3"
 Tractography = "df9aafbb-e545-4464-854d-5d08b36f846c"
 
 [compat]
 Documenter = "^1.0"
+DocumenterCodeBlocks = "1"
 julia = "1.10"

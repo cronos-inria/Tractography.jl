@@ -22,14 +22,14 @@ seeds = TG.from_fod(model, 100)
 
 ## From Mask
 
-Generate seeds from a binary or labeled mask using [`Tractography.from_mask`](@ref). This method is useful when you want to restrict seeding to specific anatomical regions.
+Generate seeds from a binary mask using [`Tractography.from_mask`](@ref). This method is useful when you want to restrict seeding to specific anatomical regions.
 
 ```julia
-# Generate 100 seeds from a mask array
-mask = # your mask array (3D binary or labeled volume)
+# Generate 100 seeds from a binary mask (AbstractArray{Bool, 3})
+mask = # your 3D binary mask
 seeds = TG.from_mask(model, mask, 100)
 ```
 
 ## Seed Format
 
-Seeds are typically represented as a matrix where each column contains the (x, y, z, ux, uy, uz) coordinates of a seed point in voxel space.
+Seeds are typically represented as a matrix where each column contains the (x, y, z, ux, uy, uz) coordinates of a seed point in native space.

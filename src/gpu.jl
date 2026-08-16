@@ -15,10 +15,10 @@ Create a cache for computing streamlines in batches. This is useful for memory-l
 - `𝒯ₐ = Array{𝒯}` array type for the cache. Pass a GPU array type like `CuArray` to run on GPU; leave as `Array` for CPU.
 """
 function init(model::Model{𝒯},
-                alg; 
-                n_sphere = 400,
-                𝒯ₐ = Array{𝒯},
-                ) where {𝒯}
+              alg; 
+              n_sphere = 400,
+              𝒯ₐ = Array{𝒯},
+              ) where {𝒯}
     cache_cpu = _init(model, _get_alg(alg), get_basis(model); n_sphere)
     # do not copy the array if the types are the same
     _is_on_cpu = cache_cpu.odf isa 𝒯ₐ
@@ -54,18 +54,18 @@ Sample the `model` in place by overwriting `streamlines`. Uses minimal memory an
 - `gputhreads::Int = 512` number of GPU threads.
 """
 function sample!(streamlines, 
-                  streamlines_length,
-                  model::Model{𝒯}, 
-                  cache::AbstractCache, 
-                  alg,
-                  seeds;
-                  maxfod_start::Bool = false,
-                  reverse_direction::Bool = false,
-                  nthreads = 8,
-                  gputhreads = 512,
-                  nₜ = size(streamlines, 2),
-                  saveat::Int = 1,
-                  𝒯ₐ = Array) where {𝒯}
+                 streamlines_length,
+                 model::Model{𝒯}, 
+                 cache::AbstractCache, 
+                 alg,
+                 seeds;
+                 maxfod_start::Bool = false,
+                 reverse_direction::Bool = false,
+                 nthreads = 8,
+                 gputhreads = 512,
+                 nₜ = size(streamlines, 2),
+                 saveat::Int = 1,
+                 𝒯ₐ = Array) where {𝒯}
     _, nx, ny, nz = size(cache.odf)
     streamlines_length .= nₜ
     if isnothing(cache.cone)
@@ -79,44 +79,44 @@ function sample!(streamlines,
     end
     # the following allows for type inference
     launch_kernel(nthreads;
-                    streamlines,
-                    streamlines_length,
-                    alg,
-                    seeds,
-                    odf = cache.odf,
-                    angles = cache.angles,
-                    directions = cache.directions,
-                    cone = cache.cone,
-                    transform = model.foddata.transform,
-                    maxfod_start,
-                    reverse_direction,
-                    proba_min = model.proba_min,
-                    dΩ = cache.dΩ,
-                    Δt = model.Δt,
-                    nx, ny, nz, gputhreads, nₜ)
+                  streamlines,
+                  streamlines_length,
+                  alg,
+                  seeds,
+                  odf = cache.odf,
+                  angles = cache.angles,
+                  directions = cache.directions,
+                  cone = cache.cone,
+                  transform = model.foddata.transform,
+                  maxfod_start,
+                  reverse_direction,
+                  proba_min = model.proba_min,
+                  dΩ = cache.dΩ,
+                  Δt = model.Δt,
+                  nx, ny, nz, gputhreads, nₜ)
     return streamlines
 end
 
 function launch_kernel(nthreads = 8;
-                        streamlines::AbstractArray{𝒯, 𝒩},
-                        streamlines_length::AbstractVector{UInt32},
-                        alg,
-                        seeds::AbstractMatrix{𝒯},
-                        odf::AbstractArray{𝒯, 4},
-                        angles::AbstractMatrix{𝒯},
-                        directions::AbstractMatrix{𝒯},
-                        cone::AbstractMatrix{𝒯},
-                        transform,
-                        maxfod_start,
-                        reverse_direction,
-                        proba_min::𝒯,
-                        dΩ::𝒯,
-                        Δt::𝒯,
-                        nx, ny, nz,
-                        gputhreads = 512,
-                        nₜ = size(streamlines, 2),
-                        saveat::Int = 1,
-                        ) where {𝒯, 𝒩}
+                       streamlines::AbstractArray{𝒯, 𝒩},
+                       streamlines_length::AbstractVector{UInt32},
+                       alg,
+                       seeds::AbstractMatrix{𝒯},
+                       odf::AbstractArray{𝒯, 4},
+                       angles::AbstractMatrix{𝒯},
+                       directions::AbstractMatrix{𝒯},
+                       cone::AbstractMatrix{𝒯},
+                       transform,
+                       maxfod_start,
+                       reverse_direction,
+                       proba_min::𝒯,
+                       dΩ::𝒯,
+                       Δt::𝒯,
+                       nx, ny, nz,
+                       gputhreads = 512,
+                       nₜ = size(streamlines, 2),
+                       saveat::Int = 1,
+                       ) where {𝒯, 𝒩}
     Nmc = size(seeds, 2)
     if size(seeds, 1) != 6 
         error("The initial positions must be passed as an 6 x N array.")

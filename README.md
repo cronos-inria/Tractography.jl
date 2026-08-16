@@ -10,7 +10,7 @@
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://cronos-inria.github.io/Tractography.jl/stable/
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-purple.svg
-[docs-dev-url]: https://cronos-inria.github.io/Tractography.jl//dev/
+[docs-dev-url]: https://cronos-inria.github.io/Tractography.jl/dev/
 
 [ver-img]: https://juliahub.com/docs/Tractography/version.svg
 [ver-url]: https://juliahub.com/ui/Packages/Tractography/

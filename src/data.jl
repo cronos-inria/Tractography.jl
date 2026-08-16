@@ -2,6 +2,8 @@ abstract type Abstract_fODFBasis end
 abstract type AbstractInterpolation end
 
 """
+$(TYPEDEF)
+
 The fODF are specified in the Spherical Harmonics basis.
 If `issymmetric == true`, only the even `l` are taken into account to yield symmetric fODF.
 """
@@ -9,6 +11,8 @@ struct SphericalHarmonics{issymmetric} <: Abstract_fODFBasis end
 issymmetric(::SphericalHarmonics{_issymmetric}) where {_issymmetric} = _issymmetric
 
 """
+$(TYPEDEF)
+
 The fODF are specified in the Diffusion Tensor Imaging basis. They are therefore expressed as
 
 f(u) = < u, D⋅u > 

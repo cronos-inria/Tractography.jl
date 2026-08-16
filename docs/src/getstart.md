@@ -1,4 +1,4 @@
-# 🚀 Get started with with Tractography.jl
+# 🚀 Get started with Tractography.jl
 ```@contents
 Pages = ["getstart.md"]
 Depth = 3
@@ -67,7 +67,7 @@ model = Model(Δt = 0.125f0,
             )
 Nmc = 10
 seeds = rand(Float32, 6, Nmc)
-streamlines = zeros(Float32, 6, 20, Nmc)
+streamlines = zeros(Float32, 3, 20, Nmc)
 tract_length = zeros(UInt32, Nmc)
 alg = Probabilistic()
 cache = TG.init(model, alg)

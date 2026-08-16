@@ -1,6 +1,6 @@
 ENV["GKSwstype"] = "100" 
 
-using Documenter, CairoMakie, Tractography
+using Documenter, CairoMakie, Tractography, DocumenterCodeBlocks
 
 # to display progress
 ENV["JULIA_DEBUG"] = Documenter
@@ -15,6 +15,7 @@ makedocs(
         edit_link = "master", 
         collapselevel = 1
     ),
+    plugins = [CodeBlocks()],
     # format = Documenter.LaTeX(),
     warnonly = true,
     draft = false,

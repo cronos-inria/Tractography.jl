@@ -62,11 +62,32 @@ Sample the Model `model`.
 - `reverse_direction::Bool` reverse initial direction.
 - `nthreads::Int = 8` number of threads on CPU.
 - `gputhreads::Int = 512` number of threads on GPU.
-- `saveat::Int` record the streamline every `saveat` step. Only available for `alg <: AbstractSDESampler`.
+- `saveat::Int = 1` store one point every `saveat` integration steps. Only available for `alg <: AbstractSDESampler` (i.e. `Diffusion`/`Transport`); the `Probabilistic`/`Deterministic` path errors if `saveat > 1`. It reduces the second dimension of `streamlines` and the values returned in `streamlines_length` (which then counts recorded points, not integration steps), but does not change the integrated trajectory, so it does not change the physical length; with `adaptive = true` the step size varies and cannot be recovered from `saveat` alone.
 
 ## Output
-- `streamlines` with shape `3 x n_saved x Nmc`, where `n_saved = 1 + (nt - 1) ÷ saveat` points are stored per full streamline (`n_saved = nt` when `saveat = 1`). In `Endpoints` mode only the first and last points are returned, so the second dimension is `2`.
-- `streamlines_length` vector of length `Nmc` with the number of stored points of each streamline.
+- `streamlines` with shape `3 x n_saved x Nmc`, where `n_saved` depends on the
+  algorithm and on `saveat`:
+  - `saveat = 1`: a point is stored at every integration step, so `n_saved = nt`;
+  - `saveat > 1` (only for `alg <: AbstractSDESampler`, i.e. `Diffusion`/`Transport`):
+    one point is stored every `saveat` integration steps, so for a streamline
+    followed to its end `n_saved = 1 + (nt - 1) ÷ saveat`;
+  - `Endpoints` mode: only the first and last points are kept, so the second
+    dimension is `2` and `n_saved = 2`.
+- `streamlines_length::Vector{UInt32}` of length `Nmc`. Its entries are a count,
+  **not a physical length (mm)**, and their meaning depends on the algorithm:
+  - `Probabilistic`/`Deterministic`: number of points stored for each streamline
+    (the number of integration steps, seed included). `saveat > 1` is not
+    supported on this path (it errors).
+  - `Diffusion`/`Transport` (full streamlines): number of points actually stored,
+    i.e. `1 + (nt - 1) ÷ saveat` for a streamline followed to its end. This is
+    directly the last valid index along the second dimension of `streamlines`,
+    so it can be used to slice or plot each streamline.
+  - `Endpoints`: number of integration steps (divided by `saveat`), which is not
+    an index into `streamlines` (only the start/end points are stored).
+  `saveat` therefore reduces `streamlines_length` on the `Diffusion`/`Transport`
+  paths: it counts *recorded points*, not integration steps. Because the step
+  size may vary (`adaptive = true`), it cannot be converted to a distance by a
+  single multiplication.
 """
 function sample(model::Model{𝒯},
                 alg::AbstractSampler,

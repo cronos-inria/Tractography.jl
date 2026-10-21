@@ -19,6 +19,9 @@ function init(model::Model{𝒯},
               n_sphere = 400,
               𝒯ₐ = Array{𝒯},
               ) where {𝒯}
+    if !(get_evaluation(model) isa PreComputeAllFOD)
+        error("Only the evaluation strategy `PreComputeAllFOD()` is supported for `Deterministic`/`Probabilistic` (got `$(get_evaluation(model))`).")
+    end
     cache_cpu = _init(model, _get_alg(alg), get_basis(model); n_sphere)
     # do not copy the array if the types are the same
     _is_on_cpu = cache_cpu.odf isa 𝒯ₐ

@@ -130,7 +130,7 @@ function sample!(streamlines,
         error("The initial positions must be passed as an 6 x N array.")
     end
     if (Nmc > size(streamlines, 3))
-        error("$Nmc <= ", size(streamlines, 3))
+        error("Nmc = $Nmc must be ≤ size(streamlines, 3) = $(size(streamlines, 3))")
     end
     if ndims(streamlines) < 3
         error("streamlines must be passed as an 3 x nt x N array")

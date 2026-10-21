@@ -1,3 +1,5 @@
+ispositive(x) = x > 0
+
 """
 $(TYPEDSIGNATURES)
 
@@ -12,7 +14,7 @@ function from_fod(model::Model{𝒯}, n_seeds::Int; n_sphere = 1000, maxfod_star
     odfs = _get_array(model.foddata)
     tf = model.foddata.transform
 
-    non_zeros = @views findall(x -> x>0, odfs[:, :, :, 1])
+    non_zeros = @views findall(ispositive, odfs[:, :, :, 1])
     n_zeros = length(non_zeros)
 
     cache = _init_fibonacci_and_sph(model, n_sphere)
@@ -32,20 +34,52 @@ function from_fod(model::Model{𝒯}, n_seeds::Int; n_sphere = 1000, maxfod_star
         end
         # sample direction, slow because not row major
         @views mul!(odf, cache.Yₗₘ, odfs[I[1], I[2], I[3], :])
-        if maxfod_start
-            ind_u = argmax(odf)
-        else
-            t = rand(𝒯) * 𝒯(sum(odf))
-            cw = zero(𝒯)
-            ind_u = 0
-            for nₐ in eachindex(odf)
-                cw += 𝒯(odf[nₐ])
-                if cw >= t
-                    ind_u = nₐ
-                    break
-                end
-            end
-        end
+        ind_u = _sample_direction_index(odf, maxfod_start, 𝒯)
+        seeds[4:6, i] .= directions[ind_u]
+    end
+    return seeds
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Return the index of the sampled direction in the fODF vector `odf`:
+- `maxfod_start = true`: direction with the largest fODF value (`argmax`);
+- otherwise: direction drawn from the fODF considered as a (unnormalized) probability distribution.
+"""
+function _sample_direction_index(odf, maxfod_start::Bool, 𝒯)
+    if maxfod_start
+        return argmax(odf)
+    end
+    t = rand(𝒯) * 𝒯(sum(odf))
+    cw = zero(𝒯)
+    for nₐ in eachindex(odf)
+        cw += 𝒯(odf[nₐ])
+        cw >= t && return nₐ
+    end
+    return lastindex(odf)
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Resample the directions (`seeds[4:6, :]`) of the pre-positioned `seeds` from the fODF, keeping the positions (`seeds[1:3, :]`, in native space) unchanged. For each position, the voxel is obtained by inverting the affine transform and clamped to the volume.
+"""
+function _set_seeds_from_fod!(model::Model{𝒯}, seeds::AbstractMatrix{𝒯}; n_sphere = 1000, maxfod_start = false) where {𝒯}
+    size(seeds, 1) == 6 || error("The seeds must be a 6 x n_seeds matrix")
+    odfs = _get_array(model.foddata)
+    tf = model.foddata.transform
+    nx, ny, nz, _ = size(model)
+
+    cache = _init_fibonacci_and_sph(model, n_sphere)
+    odf = zeros(Float64, n_sphere + 1)
+    directions = cache.directions
+
+    for i in axes(seeds, 2)
+        I = get_voxel_index(tf, (seeds[1, i], seeds[2, i], seeds[3, i]))
+        I = (clamp(Int(I[1]), 1, nx), clamp(Int(I[2]), 1, ny), clamp(Int(I[3]), 1, nz))
+        @views mul!(odf, cache.Yₗₘ, odfs[I[1], I[2], I[3], :])
+        ind_u = _sample_direction_index(odf, maxfod_start, 𝒯)
         seeds[4:6, i] .= directions[ind_u]
     end
     return seeds

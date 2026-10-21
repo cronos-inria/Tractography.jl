@@ -48,7 +48,7 @@ Returns points on the sphere in spherical coordinates which are approximately un
 function fibonacci_sampling(N, 𝒯::DataType = Float64)
     out = Vector{Tuple{𝒯, 𝒯}}(undef, N+1)
     ϕ = (1 + √5)/2
-    I = 0:N .+ 1/2
+    I = 0:N
     r = 2π / ϕ
     for (n, i) in enumerate(I)
         out[n] = ( 𝒯(acos(1 - 2i/N)), 𝒯(mod(r * i, 2π)) )

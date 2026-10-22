@@ -21,10 +21,10 @@ module Tractography
 
     include("plot.jl")
     include("models.jl")
-    include("seeds.jl")
     include("data.jl")
     include("utils.jl")
     include("modelcache.jl")
+    include("seeds.jl")
     include("sph.jl")
     include("dti.jl")
     include("sample.jl")

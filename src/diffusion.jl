@@ -31,7 +31,7 @@ function init(model::Model{𝒯},
             _is_on_cpu ? cache_cpu.odf   : 𝒯ₐ(cache_cpu.odf),
             _is_on_cpu ? cache_cpu.∂θodf : 𝒯ₐ(cache_cpu.∂θodf),
             _is_on_cpu ? cache_cpu.∂ϕodf : 𝒯ₐ(cache_cpu.∂ϕodf),
-            _is_on_cpu ? cache_cpu.cone  : 𝒯ₐ(cache_cpu.cone),
+            (_is_on_cpu || isnothing(cache_cpu.cone)) ? cache_cpu.cone : 𝒯ₐ(cache_cpu.cone),
             𝒯ₐ(mapreduce(x->[x[1] x[2] x[3]], vcat, cache_cpu.directions)),
             𝒯ₐ(mapreduce(x->[x[1] x[2]],      vcat, cache_cpu.angles)),
             _is_on_cpu ? ∫odf : 𝒯ₐ(∫odf),
@@ -144,7 +144,10 @@ function sample!(streamlines,
     streamlines_length .= 1 + (nₜ - 1) ÷ saveat
 
     # launch gpu kernel
-    backend = KA.get_backend(seeds)
+    backend = KA.get_backend(cache.odf)
+    if !(KA.get_backend(seeds) isa typeof(backend))
+        error("The seeds must live on the same backend as the cache (odf).")
+    end
     nth = backend isa KA.GPU ? gputhreads : nthreads
     kernel! = _sample_kernel_diffusion!(backend, nth)
     _alg = _get_alg(alg)

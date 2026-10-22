@@ -24,3 +24,13 @@ let
     # test normalisation
     sum(cache_c.odf, dims = 1) * cache_c.dΩ |> unique |> sort
 end
+
+# the Fibonacci lattice spans [0, π] in θ (both poles are included)
+let
+    angles = TG.fibonacci_sampling(400, Float64)
+    @test length(angles) == 401
+    @test all(x -> 0 <= x[1] <= pi, angles)
+    @test all(x -> 0 <= x[2] < 2pi, angles)
+    @test any(x -> x[1] == 0, angles) && any(x -> x[1] ≈ pi, angles)
+end
+end

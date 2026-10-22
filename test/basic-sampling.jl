@@ -146,3 +146,24 @@ let
     @test s4 ≈ 0 atol=sqrt(1/N)
     println("Y22,2: $s4  (attendu 0)")
 end
+########################
+# a mollifier like `identity` can produce negative fodf values: the probabilities
+# used by Probabilistic/Deterministic must stay non negative
+let
+    n_a = 10
+    fodf = randn(Float32, n_a, 3, 3, 3)
+    cone = ones(Float32, n_a, n_a)
+
+    cond, total, = TG.orientation_probabilities(TG.Probabilistic(), fodf, cone, 1, 1, 1, UInt32(1), UInt32(n_a))
+    @test cond >= 0
+    @test total >= 0
+
+    cond_d, total_d, = TG.orientation_probabilities(TG.Deterministic(), fodf, cone, 1, 1, 1, UInt32(1), UInt32(n_a))
+    @test cond_d >= 0
+    @test total_d >= 0
+
+    for _ in 1:100
+        ind = TG.next_orientation(TG.Probabilistic(), UInt32(1), UInt32(0), cond, fodf, cone, 1, 1, 1, UInt32(1), UInt32(n_a))
+        @test 1 <= ind <= n_a
+    end
+end

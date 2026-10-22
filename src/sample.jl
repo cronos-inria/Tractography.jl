@@ -1,7 +1,7 @@
-function _init_fibonacci(model::Model{𝒯}, n_sphere) where {𝒯}
+function _init_fibonacci(::Model{𝒯}, n_sphere) where {𝒯}
     angles = fibonacci_sampling(n_sphere, 𝒯)
     directions = [spherical_to_euclidean(d[1], d[2]) for d in angles]
-    (;angles, directions)
+    return (;angles, directions)
 end
 
 function _init_fibonacci_and_sph(model::Model{𝒯}, n_sphere) where {𝒯}
@@ -10,20 +10,20 @@ function _init_fibonacci_and_sph(model::Model{𝒯}, n_sphere) where {𝒯}
     lmax = get_lmax(model)
     Yₗₘ = get_vector_of_sh(angles, lmax)
     cone = isnothing(model.cone) ? nothing : [𝒯(model.cone(d1, d2)) for d1 in directions, d2 in directions]
-    ModelCache(; n_sphere = n_angles, Yₗₘ, dΩ = 𝒯(4pi / n_angles), angles, lmax, cone, directions)
+    return ModelCache(; n_sphere = n_angles, Yₗₘ, dΩ = 𝒯(4pi / n_angles), angles, lmax, cone, directions)
 end
 
 # for plotting
 function _init(model::Model{𝒯, PlottingFOD},
-                alg::AbstractNotPureRejectionSampler,
-                basis::SphericalHarmonics;
+                ::AbstractNotPureRejectionSampler,
+                ::SphericalHarmonics;
                 n_sphere = 400) where {𝒯}
     _init_fibonacci_and_sph(model, n_sphere)
 end
 
 function _init(model::Model{𝒯, PreComputeAllFOD},
-                alg::AbstractNotPureRejectionSampler,
-                basis::SphericalHarmonics; 
+                ::AbstractNotPureRejectionSampler,
+                ::SphericalHarmonics; 
                 n_sphere = 400) where {𝒯}
     cache = _init_fibonacci_and_sph(model, n_sphere)
     _build_cache_from_Y_matrix(model, cache, cache.Yₗₘ)

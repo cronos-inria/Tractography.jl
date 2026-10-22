@@ -224,7 +224,7 @@ function FODData(file_name::String;
     # we normalize the ODF to have mass one
     if basis isa SphericalHarmonics && 
         ~all(x-> x >= 0, data.raw[:,:,:,1]) 
-        @warn "Some zero SH coefficients are negative!\nPutting them to zero"
+        @warn "Some zero SH coefficients c₀₀ are negative!\nPutting them to zero"
     end
     if normalize_it
         _normalize_data!(data)

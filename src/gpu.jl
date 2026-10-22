@@ -30,7 +30,7 @@ function init(model::Model{𝒯},
             _is_on_cpu ? cache_cpu.odf : 𝒯ₐ(cache_cpu.odf),
             𝒯ₐ(zeros(𝒯, 0,0,0,0)),
             𝒯ₐ(zeros(𝒯, 0,0,0,0)),
-            _is_on_cpu ? cache_cpu.cone : 𝒯ₐ(cache_cpu.cone),
+            (_is_on_cpu || isnothing(cache_cpu.cone)) ? cache_cpu.cone : 𝒯ₐ(cache_cpu.cone),
             𝒯ₐ(mapreduce(x->[x[1] x[2] x[3]], vcat, cache_cpu.directions)),
             𝒯ₐ(mapreduce(x->[x[1] x[2]], vcat, cache_cpu.angles)),
             nothing,
@@ -133,7 +133,10 @@ function launch_kernel(nthreads = 8;
     @debug "" size(streamlines) nthreads gputhreads size(odf) nx ny nz alg
 
     # launch cpu / gpu kernel
-    backend = KA.get_backend(seeds)
+    backend = KA.get_backend(odf)
+    if !(KA.get_backend(seeds) isa typeof(backend))
+        error("The seeds must live on the same backend as the cache (odf).")
+    end
     _nthreads = backend isa KA.GPU ? gputhreads : nthreads
     kernel! = _sample_kernel!(backend, _nthreads)
     @time "kernel " kernel!(
@@ -278,7 +281,7 @@ Returns a tuple `(conditioned_proba, total_proba, ind_max)` where:
     total_proba = conditioned_proba = proba_max = zero(𝒯)
     ind_max = UInt32(0)
     for i = UInt32(1):n_angles # use of axes prevents from optimization, better use 1:n
-        proba0 = fodf[i, voxel_index₁, voxel_index₂, voxel_index₃] # it is >= 0 already!
+        proba0 = max(zero(𝒯), fodf[i, voxel_index₁, voxel_index₂, voxel_index₃]) # it is >= 0 already!
         cone_c = cone[i, ind_u]
         proba = proba0 * cone_c
         # keep track of conditional probabilities
@@ -328,7 +331,7 @@ Select the next orientation given the sampling algorithm.
     cw = zero(𝒯)
     for nₐ = UInt32(1):n_angles
         # compute proba
-        proba0 = fodf[nₐ, voxel_index₁, voxel_index₂, voxel_index₃]
+        proba0 = max(zero(𝒯), fodf[nₐ, voxel_index₁, voxel_index₂, voxel_index₃])
         cone_c = cone[nₐ, ind_u0]
         cw += proba0 * cone_c
         if cw >= t

@@ -129,6 +129,7 @@ Initialize the direction and voxel index for a new streamline.
                                     fodf::AbstractArray{𝒯, 4},
                                     directions::AbstractMatrix{𝒯},
                                     n_angles::UInt32,
+                                    nx, ny, nz,
                                     x₁, x₂, x₃,
                                     u₁, u₂, u₃
                                 ) where {𝒯}
@@ -137,10 +138,12 @@ Initialize the direction and voxel index for a new streamline.
 
     if maxfod_start && precomputed_odf
         voxel_index₁, voxel_index₂, voxel_index₃ = get_voxel_index(tf, (x₁, x₂, x₃))
-        ind_u = _device_argmax(fodf, voxel_index₁, voxel_index₂, voxel_index₃, n_angles)
-        u₁ = directions[ind_u, 1]
-        u₂ = directions[ind_u, 2]
-        u₃ = directions[ind_u, 3]
+        if in_image(voxel_index₁, voxel_index₂, voxel_index₃, nx, ny, nz)
+            ind_u = _device_argmax(fodf, voxel_index₁, voxel_index₂, voxel_index₃, n_angles)
+            u₁ = directions[ind_u, 1]
+            u₂ = directions[ind_u, 2]
+            u₃ = directions[ind_u, 3]
+        end
     end
 
     if reverse_direction

@@ -223,6 +223,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
     (;ind_u, u₁, u₂, u₃, voxel_index₁, voxel_index₂, voxel_index₃) = _init_streamline(
                                     maxfod_start, reverse_direction, precomputed_fod,
                                     transform, cache.odf, cache.directions, n_angles,
+                                    nx, ny, nz,
                                     x₁, x₂, x₃, u₁, u₂, u₃)
 
     streamlines[1, 1, nₙₘ] = x₁

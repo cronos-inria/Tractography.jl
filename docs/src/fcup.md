@@ -59,7 +59,7 @@ println("Dimension of computed streamlines = ", size(streamlines))
 ```@example FCUP
 f = Figure(backgroundcolor = :white, size=(800,800));
 ind_st = findall(tract_length .> 60)
-scene = Axis(f[1,1], title = "$(length(ind_st)) / $(length(stl_lengths)) selected streamlines")
+scene = Axis(f[1,1], title = "$(length(ind_st)) / $(length(tract_length)) selected streamlines")
 TG.plot_fod!(scene, model; n_sphere = 500, radius = 0.3, st = 1);
 TG.plot_streamlines!(scene, streamlines[:, :, ind_st[1:10:end]], tract_length[ind_st[1:10:end]])
 f

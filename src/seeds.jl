@@ -34,6 +34,7 @@ function from_fod(model::Model{𝒯}, n_seeds::Int; n_sphere = 1000, maxfod_star
         end
         # sample direction, slow because not row major
         @views mul!(odf, cache.Yₗₘ, odfs[I[1], I[2], I[3], :])
+        odf .= model.mollifier.(odf)
         ind_u = _sample_direction_index(odf, maxfod_start, 𝒯)
         seeds[4:6, i] .= directions[ind_u]
     end
@@ -51,7 +52,11 @@ function _sample_direction_index(odf, maxfod_start::Bool, 𝒯)
     if maxfod_start
         return argmax(odf)
     end
-    t = rand(𝒯) * 𝒯(sum(odf))
+    total = 𝒯(sum(odf))
+    if total <= zero(𝒯)
+        return rand(eachindex(odf))
+    end
+    t = rand(𝒯) * total
     cw = zero(𝒯)
     for nₐ in eachindex(odf)
         cw += 𝒯(odf[nₐ])
@@ -79,6 +84,7 @@ function _set_seeds_from_fod!(model::Model{𝒯}, seeds::AbstractMatrix{𝒯}; n
         I = get_voxel_index(tf, (seeds[1, i], seeds[2, i], seeds[3, i]))
         I = (clamp(Int(I[1]), 1, nx), clamp(Int(I[2]), 1, ny), clamp(Int(I[3]), 1, nz))
         @views mul!(odf, cache.Yₗₘ, odfs[I[1], I[2], I[3], :])
+        odf .= model.mollifier.(odf)
         ind_u = _sample_direction_index(odf, maxfod_start, 𝒯)
         seeds[4:6, i] .= directions[ind_u]
     end

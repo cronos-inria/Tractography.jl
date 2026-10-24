@@ -39,7 +39,9 @@ function evaluate_for_diffusion(::DTI,
                                 θ::𝒯,
                                 ::Int32,
                                 voxels::Tuple{UInt32, UInt32, UInt32},
-                                cache::ThreadedCache) where {𝒯}
+                                cache::ThreadedCache,
+                                mollifier::M,
+                                d_mollifier::M2) where {𝒯, M, M2}
     voxel_index₁, voxel_index₂, voxel_index₃ = voxels
     V = @view cache.odf[:, voxel_index₁, voxel_index₂, voxel_index₃]
     tensor = to_tensor(V)

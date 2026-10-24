@@ -33,4 +33,3 @@ let
     @test all(x -> 0 <= x[2] < 2pi, angles)
     @test any(x -> x[1] == 0, angles) && any(x -> x[1] ≈ pi, angles)
 end
-end

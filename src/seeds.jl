@@ -12,7 +12,7 @@ Generate seeds from orientation distribution functions.
 function from_fod(model::Model{𝒯}, n_seeds::Int; n_sphere = 1000, maxfod_start = false) where {𝒯}
     seeds = zeros(𝒯, 6, n_seeds)
     odfs = _get_array(model.foddata)
-    tf = model.foddata.transform
+    tf = _get_transform(model)
 
     non_zeros = @views findall(ispositive, odfs[:, :, :, 1])
     n_zeros = length(non_zeros)
@@ -68,7 +68,7 @@ Resample the directions (`seeds[4:6, :]`) of the pre-positioned `seeds` from the
 function _set_seeds_from_fod!(model::Model{𝒯}, seeds::AbstractMatrix{𝒯}; n_sphere = 1000, maxfod_start = false) where {𝒯}
     size(seeds, 1) == 6 || error("The seeds must be a 6 x n_seeds matrix")
     odfs = _get_array(model.foddata)
-    tf = model.foddata.transform
+    tf = _get_transform(model)
     nx, ny, nz, _ = size(model)
 
     cache = _init_fibonacci_and_sph(model, n_sphere)

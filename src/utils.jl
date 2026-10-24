@@ -4,7 +4,7 @@ macro time_debug(msg, ex)
         local ret = @timed $(esc(ex))
         local _msg = $(esc(msg))
         local _msg_str = _msg === nothing ? _msg : string(_msg)
-        time = strip(sprint(Base.time_print, ret.time*1e9, ret.gcstats.allocd, ret.gcstats.total_time, Base.gc_alloc_count(ret.gcstats)))
+        local time = strip(sprint(Base.time_print, ret.time*1e9, ret.gcstats.allocd, ret.gcstats.total_time, Base.gc_alloc_count(ret.gcstats)))
         @debug _msg_str * " " * time
         ret.value
     end
@@ -35,7 +35,7 @@ Transform cartesian to spherical coordinates. Assume that the vector has norm on
 Return (θ, ϕ) where θ ∈ [0, π] and ϕ ∈ [-π, π].
 """
 @inline function euclidean_to_spherical(x, y, z)
-    t = acos(z)
+    t = acos(clamp(z, -oneunit(z), oneunit(z)))
     p = atan(y, x)
     return t, p
 end

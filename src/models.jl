@@ -217,10 +217,17 @@ $(TYPEDFIELDS)
 end
 @inline getdata(model::Model) = model.foddata
 Base.size(model::Model) = size(getdata(model))
-Base.eltype(model::Model{𝒯}) where 𝒯 = 𝒯
+Base.eltype(::Model{𝒯}) where 𝒯 = 𝒯
 @inline get_lmax(model::Model) = get_lmax(getdata(model))
 @inline get_basis(model::Model) = get_basis(getdata(model))
 @inline get_evaluation(model::Model) = model.evaluation_algo
+
+"""
+$(TYPEDSIGNATURES)
+
+Affine transform associated with the model data. If the data is a raw array (not an `FODData`), a trivial (identity) transform is returned.
+"""
+@inline _get_transform(model::Model) = _get_transform(getdata(model))
 
 """
 $(TYPEDSIGNATURES)

@@ -104,14 +104,17 @@ $(TYPEDSIGNATURES)
 max `l` coordinate of spherical harmonics.
 """
 @inline get_lmax(foddata::FODData) = foddata.lmax
+@inline get_lmax(data::AbstractArray) = get_lmax_from_fod_length(size(data, 4))
 Base.size(foddata::FODData) = size(foddata.data)
 _get_array(x::AbstractArray) = x
 _get_array(x::NIfTI.NIVolume) = x.raw
 _get_array(x::FODData) = _get_array(x.data)
 _my_typeof(x) = typeof(x)
 _my_typeof(x::NIfTI.NIVolume) = typeof(x.raw)
-is_normalized(foddata) = foddata.normalized
-get_basis(foddata) = foddata.basis
+@inline is_normalized(foddata::FODData) = foddata.normalized
+@inline get_basis(foddata::FODData) = foddata.basis
+_get_transform(foddata::FODData) = foddata.transform
+_get_transform(foddata) = error("Not defined for this argument type!!")
 
 """
 $(TYPEDSIGNATURES)
@@ -241,15 +244,16 @@ $(TYPEDSIGNATURES)
 
 Normalize the data so that the first coefficient belongs to {0, 1}.
 """
-function _normalize_data!(data::AbstractArray{𝒯, N}) where {𝒯, N}
-    if N < 4; return; end
-    nx,ny,nz, = size(data.raw)
+function _normalize_data!(data)
+    arr = _get_array(data)
+    if ndims(arr) < 4; return; end
+    nx, ny, nz, = size(arr)
     Threads.@threads for k = 1:nz
         for j = 1:ny
             for i = 1:nx
-                α = data.raw[i,j,k,1]
+                α = arr[i,j,k,1]
                 if α > 0
-                    data.raw[i,j,k,:] ./= α
+                    arr[i,j,k,:] ./= α
                 end
             end
         end

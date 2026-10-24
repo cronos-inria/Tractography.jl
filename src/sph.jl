@@ -22,8 +22,18 @@ get_fod_length(lmax) = div(lmax^2, 2) + div(3 * lmax, 2) + 1
 $(TYPEDSIGNATURES)
 
 Get the lmax from the ODF length, ie `size(data, 4)`. The is the inverse mapping of `get_fod_length`.
+
+Throws an `ArgumentError` if `n` is not a valid fODF length, i.e. not of the form
+`1, 6, 15, 28, 45, 66, 91, 120, ...`.
 """
-get_lmax_from_fod_length(n) = Int(-3/2 + sqrt(1 + 8*n)/2)
+function get_lmax_from_fod_length(n)
+    l = -3 / 2 + sqrt(1 + 8n) / 2
+    lmax = round(Int, l)
+    if lmax < 0 || get_fod_length(lmax) != n
+        throw(ArgumentError("n = $n is not a valid fODF length. Expected one of 1, 6, 15, 28, 45, 66, 91, 120, ..."))
+    end
+    return lmax
+end
 
 """
 $(TYPEDSIGNATURES)

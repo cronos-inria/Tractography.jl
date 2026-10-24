@@ -96,7 +96,7 @@ function _init(model::Model{𝒯, PreComputeAllFOD},
     @time_debug "Apply mollifier" LV.@tturbo @. odf_vt = d_mollifier_odf_v * odf_vt
     ∂θodf = reshape(odf_vt, nx, ny, nz, na);
 
-    # compute all ∂ϕODF
+    # compute all ∂ϕODF / sin(θ) (division done analytically in ∂ϕYₗₘ to stay finite at the poles)
     ∂ϕY = 𝒯.(∂ϕYₗₘ)
     odf_vp = @time_debug "all ∂ϕodf:" ni_v * ∂ϕY';
     @time_debug "Apply mollifier" LV.@tturbo @. odf_vp = d_mollifier_odf_v * odf_vp
@@ -254,7 +254,7 @@ KA.@kernel inbounds=true function _sample_kernel_diffusion!(
                 ind_u = _device_get_angle(cache.directions, u₁, u₂, u₃, n_angles)
             end
             # Careful that ∂F∂ϕ = ∂(FODF)∂ϕ / sin(θ) to avoid division by zero
-            F, ∂F∂ϕ, ∂F∂θ, ∫F = evaluate_for_diffusion(basis, evaluation_algo, ϕᵢ, θᵢ, ind_u, (voxel_index₁, voxel_index₂, voxel_index₃), cache)
+            F, ∂F∂ϕ, ∂F∂θ, ∫F = evaluate_for_diffusion(basis, evaluation_algo, ϕᵢ, θᵢ, ind_u, (voxel_index₁, voxel_index₂, voxel_index₃), cache, alg.mollifier, alg.d_mollifier)
             continue_tracking = (∫F > proba_min) && (F > proba_min) # recall ∫F ∈ [0, 1]
         end
 

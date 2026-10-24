@@ -24,12 +24,9 @@ Just for fun, we plot the FODs of the model.
 
 ```@example FCUP
 using CairoMakie
-
-f, sc = TG.plot_fod(model; n_sphere = 1500, radius = 0.3, st = 2);
-cam3d = Makie.cameracontrols(sc)
-cam3d.eyeposition[] = Vec3f(85, 95, -28)
-cam3d.lookat[] = Vec3f(84, 95, 59)
-rotate_cam!(sc.scene, 0, 0, -pi/2)
+f = Figure(backgroundcolor = :white); 
+sc = Axis(f[1,1])
+TG.plot_fod!(sc, model; n_sphere = 1500, radius = 0.5, st = 2);
 f
 ```
 
@@ -60,7 +57,9 @@ println("Dimension of computed streamlines = ", size(streamlines))
 # plot the streamlines
 
 ```@example FCUP
-f, scene = @time TG.plot_fod(model; n_sphere = 500, radius = 0.3, st = 1);
+f = Figure(backgroundcolor = :white, size=(800,800)); 
+scene = Axis(f[1,1], title = "$(length(IND)) / $(length(stl_lengths)) selected streamlines")
+TG.plot_fod!(scene, model; n_sphere = 500, radius = 0.3, st = 1);
 ind_st = findall(tract_length .> 60)
 TG.plot_streamlines!(scene, streamlines[:, :, ind_st[1:10:end]], tract_length[ind_st[1:10:end]])
 f
@@ -68,7 +67,7 @@ f
 
 We can also add the seeds
 ```@example FCUP
-scatter!(scene, seeds[1:3, ind_st[1:10:end]], color = :white)
+scatter!(scene, seeds[1:3, ind_st[1:10:end]], color = :black)
 f
 ```
 

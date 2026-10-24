@@ -1,4 +1,4 @@
-import ForwardDiff
+import ForwardDiff as FD
 
 """
 $(TYPEDSIGNATURES)
@@ -42,9 +42,7 @@ Evaluate the θ derivative of real orthonormal spherical harmonics.
 
 Based on `FastTransforms.sphevaluate` and `ForwardDiff.jl`
 """
-function ∂θro_sh(θ, ϕ, l, m, outer_f = identity)
-    ForwardDiff.derivative(z -> outer_f(ro_sh(z, ϕ, l, m)), θ)
-end
+∂θro_sh(θ, ϕ, l, m, outer_f = identity) = FD.derivative(z -> outer_f(ro_sh(z, ϕ, l, m)), θ)
 
 """
 $(TYPEDSIGNATURES)
@@ -53,9 +51,7 @@ Evaluate the ϕ derivative of real orthonormal spherical harmonics.
 
 Based on `FastTransforms.sphevaluate` and `ForwardDiff.jl`
 """
-function ∂ϕro_sh(θ, ϕ, l, m, outer_f = identity)
-    ForwardDiff.derivative(z -> outer_f(ro_sh(θ, z, l, m)), ϕ)
-end
+∂ϕro_sh(θ, ϕ, l, m, outer_f = identity) = FD.derivative(z -> outer_f(ro_sh(θ, z, l, m)), ϕ)
 
 """
 $(TYPEDSIGNATURES)
@@ -66,9 +62,7 @@ Recall that ∫ ODF = c₀₀ √4π
 
 Based on `FastTransforms.sphevaluate`. You can also check the [url](https://juliaapproximation.github.io/FastTransforms.jl/dev/#FastTransforms.sphevaluate)
 """
-function ro_sh(θ, ϕ, l, m)
-    FastTransforms.sphevaluate(θ, ϕ, l, m)
-end
+ro_sh(θ, ϕ, l, m) = FastTransforms.sphevaluate(θ, ϕ, l, m)
 
 """
 $(TYPEDSIGNATURES)
@@ -231,8 +225,7 @@ Returns (S, ∂ϕS, ∂θS).
 !!! warning "Limitation"
     This is currently limited to `lmax<=8`
 """
-@inline ishtmtx_dot(phi::𝒯, theta::𝒯, V::AbstractVector{𝒯}) where {𝒯} =
-    _ishtmtx_dot_impl(Val(false), phi, theta, V)
+@inline ishtmtx_dot(phi::𝒯, theta::𝒯, V::AbstractVector{𝒯}) where {𝒯} = _ishtmtx_dot_impl(Val(false), phi, theta, V)
 
 """
 $(TYPEDSIGNATURES)

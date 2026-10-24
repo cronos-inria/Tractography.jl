@@ -21,6 +21,7 @@ module Tractography
 
     include("plot.jl")
     include("models.jl")
+    include("io.jl")
     include("data.jl")
     include("utils.jl")
     include("modelcache.jl")

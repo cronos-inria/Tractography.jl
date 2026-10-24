@@ -105,6 +105,7 @@ Tractography._apply_mask!
 
 ```@docs
 Tractography.save_streamlines
+Tractography.save_streamlines_julia
 ```
 
 ```@docs

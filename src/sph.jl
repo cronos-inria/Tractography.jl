@@ -439,16 +439,18 @@ function evaluate_for_diffusion(::SphericalHarmonics,
                                 θ::𝒯,
                                 ::Int32,
                                 voxels::Tuple{UInt32, UInt32, UInt32},
-                                cache::ThreadedCache) where {𝒯}
+                                cache::ThreadedCache,
+                                mollifier::M,
+                                d_mollifier::M2) where {𝒯, M, M2}
     voxel_index₁, voxel_index₂, voxel_index₃ = voxels
     V = @view cache.odf[:, voxel_index₁, voxel_index₂, voxel_index₃]
     # we evaluate the derivative of the FODF. 
     # Careful that ∂F∂ϕ = ∂(FODF)∂ϕ / sin(θ) to avoid division by zero
     F, ∂F∂ϕ, ∂F∂θ = ishtmtx_dot_divst(ϕ, θ, V)
 
-    # we apply a soft plus so that F > 0
-    ∂ = ∂softplus(F, convert(𝒯, 100))
-    F =  softplus(F, convert(𝒯, 100))
+    # we apply the mollifier so that F > 0
+    ∂ = d_mollifier(F)
+    F =  mollifier(F)
     ∂F∂θ *= ∂
     ∂F∂ϕ *= ∂
 
@@ -462,7 +464,9 @@ function evaluate_for_diffusion(::SphericalHarmonics,
                                 θ::𝒯,
                                 ind_u::Int32,
                                 voxels::Tuple{UInt32, UInt32, UInt32},
-                                cache::ThreadedCache) where {𝒯}
+                                cache::ThreadedCache,
+                                mollifier::M,
+                                d_mollifier::M2) where {𝒯, M, M2}
     voxel_index₁, voxel_index₂, voxel_index₃ = voxels
     ∫F  =            cache.∫odf[voxel_index₁, voxel_index₂, voxel_index₃]
     F   =      cache.odf[ind_u, voxel_index₁, voxel_index₂, voxel_index₃]

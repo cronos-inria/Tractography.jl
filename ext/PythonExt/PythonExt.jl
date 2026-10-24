@@ -22,8 +22,8 @@ module PythonExt
         end
         nib = pyimport("nibabel")
         np = pyimport("numpy")
-        streamlines = tracto = [tractogram[:, 1:tracto_length[k], k]' for k in axes(tractogram, 3) if tracto_length[k] > 2]
-        @info "Saving in file: " filename
+        streamlines = [( tractogram[:, 1:tracto_length[k], k])' for k in axes(tractogram, 3) if tracto_length[k] > 2]
+        @info "Saving in file $filename by calling nibabel"
         nib.streamlines.TckFile(nib.streamlines.Tractogram(streamlines, affine_to_rasmm = np.eye(4))).save(filename)
     end
 end

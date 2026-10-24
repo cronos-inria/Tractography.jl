@@ -234,7 +234,7 @@ $(TYPEDSIGNATURES)
 
 `max(x, 0)` as mollifier to prevent negative ODF.
 """
-max_mollifier(x) = max(0, x)
+max_mollifier(x) = relu(x)
 get_range(model::Model) = get_range(getdata(model))
 get_array(model::Model) = _get_array(getdata(model))
 

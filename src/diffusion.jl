@@ -41,11 +41,10 @@ end
 
 # in this mode, we do not precompute the FOD, we evaluate them on the fly
 function init(model::Model{𝒯, DirectFOD},
-                alg::Union{Talg, Endpoints{ Talg}};
+                ::Union{Talg, Endpoints{ Talg}};
                 𝒯ₐ = Array{𝒯},
                 n_sphere = 0) where {𝒯, Talg <: AbstractSDESampler}
     ni = 𝒯.(get_array(model))
-    cache_cpu = ModelCache(; n_sphere, angles = 0, lmax = get_lmax(model), dΩ = zero(𝒯))
     fod = permutedims(ni, (4, 1, 2, 3))
     if is_normalized(model.foddata)
         fod ./= 𝒯(sqrt(4pi))
@@ -68,7 +67,7 @@ end
 
 function _init(model::Model{𝒯, PreComputeAllFOD},
                 alg::AbstractSDESampler,
-                basis::SphericalHarmonics;
+                ::SphericalHarmonics;
                 n_sphere = 400) where 𝒯
     # we want to differentiate wrt (θ,ϕ) the expression mollifier(fodf(θ,ϕ))
     # the expression is ∂mollifier(fodf(θ,ϕ)) * ∂fodf(θ,ϕ)

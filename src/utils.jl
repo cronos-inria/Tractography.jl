@@ -65,6 +65,8 @@ For `k*x ≥ 30`, returns `x` directly to avoid overflow.
 """
 @inline softplus(x, k = 1) = ifelse(k * x < 30, log1p(exp(k * x)) / k, x) # avoid Inf for x large
 @inline ∂softplus(x, k = 1) = 1 / (1 + exp(-k * x))
+
+@inline relu(x) = x > zero(x) ? x : zero(x)
 ####################################################################################################
 @inline function in_image(voxel_index₁::Integer, voxel_index₂::Integer, voxel_index₃::Integer, nx, ny, nz)
     return 1 <= voxel_index₁ <= nx &&
